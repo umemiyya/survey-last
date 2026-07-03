@@ -41,23 +41,13 @@ export function SatisfactionPieChart({ distribusi }: SatisfactionPieChartProps) 
               <Cell key={entry.name} fill={SATISFACTION_HEX[entry.name as keyof typeof SATISFACTION_HEX]} />
             ))}
           </Pie>
-          <Tooltip
-            contentStyle={{
-              borderRadius: 12,
-              border: '1px solid #f1f5f9',
-              fontSize: 13,
-            }}
-          />
+          <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #f1f5f9', fontSize: 13 }} />
         </PieChart>
       </ResponsiveContainer>
-
-      <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-2">
+      <div className="flex justify-center gap-5 mt-2">
         {data.map((entry) => (
           <div key={entry.name} className="flex items-center gap-1.5">
-            <span
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: SATISFACTION_HEX[entry.name as keyof typeof SATISFACTION_HEX] }}
-            />
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: SATISFACTION_HEX[entry.name as keyof typeof SATISFACTION_HEX] }} />
             <span className="text-xs text-slate-500">
               {entry.name} · {total > 0 ? Math.round((entry.value / total) * 100) : 0}%
             </span>

@@ -1,14 +1,6 @@
 'use client'
 
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { SATISFACTION_LEVELS, SATISFACTION_HEX } from '@/lib/satisfaction'
 
 interface MonthlyDataPoint {
@@ -16,14 +8,8 @@ interface MonthlyDataPoint {
   [key: string]: string | number
 }
 
-interface MonthlyBarChartProps {
-  data: MonthlyDataPoint[]
-}
-
-export function MonthlyBarChart({ data }: MonthlyBarChartProps) {
-  const hasData = data.some((d) =>
-    SATISFACTION_LEVELS.some((level) => (d[level] as number) > 0)
-  )
+export function MonthlyBarChart({ data }: { data: MonthlyDataPoint[] }) {
+  const hasData = data.some((d) => SATISFACTION_LEVELS.some((level) => (d[level] as number) > 0))
 
   if (!hasData) {
     return (
@@ -37,27 +23,9 @@ export function MonthlyBarChart({ data }: MonthlyBarChartProps) {
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={data} barCategoryGap={12}>
         <CartesianGrid vertical={false} stroke="#f1f5f9" />
-        <XAxis
-          dataKey="name"
-          tick={{ fontSize: 12, fill: '#94a3b8' }}
-          axisLine={false}
-          tickLine={false}
-        />
-        <YAxis
-          tick={{ fontSize: 12, fill: '#94a3b8' }}
-          axisLine={false}
-          tickLine={false}
-          allowDecimals={false}
-          width={28}
-        />
-        <Tooltip
-          contentStyle={{
-            borderRadius: 12,
-            border: '1px solid #f1f5f9',
-            fontSize: 13,
-          }}
-          cursor={{ fill: '#f8fafc' }}
-        />
+        <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} width={28} />
+        <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #f1f5f9', fontSize: 13 }} cursor={{ fill: '#f8fafc' }} />
         {SATISFACTION_LEVELS.map((level, i) => (
           <Bar
             key={level}

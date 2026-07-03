@@ -18,11 +18,12 @@ export default async function UserDashboard() {
 
   console.log()
 
-  if(user?.emailAddresses[0].emailAddress == 'nanashieth@gmail.com') {
+  if(user?.emailAddresses[0].emailAddress == 'adminadsmakassar@gmail.com') {
     redirect('/admin')
   }
 
   // Cek apakah user sudah pernah submit survey (nama responden mengandung fullName user)
+  // @ts-ignore
   const sudahIsi = surveys.some((survey) =>
     survey.responden?.toLowerCase().includes(user?.fullName?.toLowerCase() ?? '')
   )

@@ -33,13 +33,7 @@
 import { RandomForestClassifier } from 'ml-random-forest'
 import type { SurveyRatings } from './classifier'
 
-export const LABEL_MAP = [
-  'Tidak Puas',
-  'Kurang Puas',
-  'Netral',
-  'Puas',
-  'Sangat Puas',
-] as const
+export const LABEL_MAP = ['Tidak Puas', 'Puas', 'Sangat Puas'] as const
 
 // Urutan kolom HARUS konsisten antara training dan prediksi
 const FEATURE_ORDER: (keyof SurveyRatings)[] = [
@@ -86,7 +80,7 @@ export function ratingsToFeatureVector(ratings: SurveyRatings): number[] {
 
 /** Memuat ulang model yang sudah dilatih sebelumnya dari JSON tersimpan */
 export function loadModel(json: object) {
-  // @ts-ignore //
+  // @ts-ignore
   return RandomForestClassifier.load(json)
 }
 
