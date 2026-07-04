@@ -1,6 +1,5 @@
 /**
- * Weighted threshold classifier untuk prediksi kepuasan pelanggan.
- * 3 kelas: Tidak Puas | Puas | Sangat Puas
+ * Weighted threshold classifier — skala Likert 3 poin (1=Tidak Puas, 2=Puas, 3=Sangat Puas)
  */
 
 export interface SurveyRatings {
@@ -45,7 +44,8 @@ export function classifySurvey(ratings: SurveyRatings): ClassificationResult {
     (key) => {
       const bobot = FEATURE_WEIGHTS[key]
       const nilai = ratings[key]
-      const kontribusiPoin = ((nilai - 1) / 4) * bobot
+      // Normalisasi skala 1-3 ke 0-1: (nilai - 1) / (3 - 1) = (nilai - 1) / 2
+      const kontribusiPoin = ((nilai - 1) / 2) * bobot
       return {
         fitur: FEATURE_LABELS[key],
         bobot,
@@ -58,11 +58,11 @@ export function classifySurvey(ratings: SurveyRatings): ClassificationResult {
   const skorMentah = kontribusi.reduce((sum, k) => sum + k.kontribusi, 0)
   const skor = Math.round(skorMentah)
 
-  // Threshold: 0-54 = Tidak Puas, 55-79 = Puas, 80-100 = Sangat Puas
+  // Threshold: 0-39 = Tidak Puas, 40-69 = Puas, 70-100 = Sangat Puas
   let prediksi: ClassificationResult['prediksi']
-  if (skor >= 80) {
+  if (skor >= 70) {
     prediksi = 'Sangat Puas'
-  } else if (skor >= 55) {
+  } else if (skor >= 40) {
     prediksi = 'Puas'
   } else {
     prediksi = 'Tidak Puas'
@@ -70,10 +70,10 @@ export function classifySurvey(ratings: SurveyRatings): ClassificationResult {
 
   const jarakKeBatas =
     prediksi === 'Sangat Puas'
-      ? skor - 80
+      ? skor - 70
       : prediksi === 'Puas'
-        ? Math.min(skor - 55, 80 - skor)
-        : 55 - skor
+        ? Math.min(skor - 40, 70 - skor)
+        : 40 - skor
 
   const probabilitas = Math.min(99, Math.max(65, 70 + jarakKeBatas))
 
