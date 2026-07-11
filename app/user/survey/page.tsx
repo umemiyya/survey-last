@@ -211,19 +211,40 @@ export default function SurveyPage() {
       // Hitung rata-rata 3 sub-pernyataan kategori ini → set ke form
       const vals = [0, 1, 2].map((i) => next[`${key}_${i}`] ?? null)
       const avg = avgLikert(vals)
-      if (avg > 0) setValue(key as any, avg, { shouldValidate: true })
+      if (avg > 0) {
+        setValue(key as any, avg, { shouldValidate: true })
+        // FIX: kualitasPengharum tidak punya kategori UI sendiri di kuesioner
+        // baru — field ini di-proxy dari pelayananService. Sebelumnya hanya
+        // di-set saat onSubmit (yang tidak pernah tercapai karena Zod
+        // menolak duluan akibat nilai default 0 pada kualitasPengharum).
+        if (key === 'pelayananService') {
+          setValue('kualitasPengharum' as any, avg, { shouldValidate: true })
+        }
+      }
       return next
     })
+  }
+
+  // FIX: sinkronkan jawaban Ya/Tidak ke react-hook-form untuk field yang
+  // masuk DB (akanMenggunakan, pelayananDiperpanjang). Sebelumnya jawaban
+  // hanya disimpan di state lokal `ynAnswers` dan tidak pernah di-`setValue`,
+  // sehingga Zod selalu melihat string kosong ('') dan memblokir submit.
+  const setYnAnswer = (id: string, opt: string, keDb: boolean) => {
+    setYnAnswers((prev) => ({ ...prev, [id]: opt }))
+    if (keDb) {
+      setValue(id as keyof SurveyFormData, opt as any, { shouldValidate: true })
+    }
   }
 
   const onSubmit = async (data: SurveyFormData) => {
     setIsSubmitting(true)
 
-    // kualitasPengharum = rata-rata dari pelayananService (keduanya tidak punya
-    // kategori terpisah di kuesioner baru, mapping ke field DB yang tersedia)
+    // kualitasPengharum sudah disinkronkan live via setValue di setSubRating
+    // (lihat FIX di atas), jadi di sini tidak perlu proxy manual lagi —
+    // tapi tetap dijaga sebagai fallback kalau-kalau belum ter-set.
     const finalData = {
       ...data,
-      kualitasPengharum: data.pelayananService, // proxy
+      kualitasPengharum: data.kualitasPengharum || data.pelayananService,
       akanMenggunakan: ynAnswers['akanMenggunakan'] || '',
       pelayananDiperpanjang: ynAnswers['pelayananDiperpanjang'] || '',
       responden: `${data.responden} - ${
@@ -240,6 +261,18 @@ export default function SurveyPage() {
     }
 
     router.push(`/user/result?id=${result.id}`)
+  }
+
+  // FIX: tanpa handler ini, kegagalan validasi Zod diam-diam menghentikan
+  // submit tanpa feedback apapun ke user (tombol "Kirim Survey" terasa
+  // seperti tidak berfungsi). Sekarang user diberi tahu bagian mana yang
+  // belum lengkap, dan detailnya masuk ke console untuk debugging.
+  const onInvalid = (formErrors: typeof errors) => {
+    console.log('Validation failed:', formErrors)
+    const missing = Object.keys(formErrors)
+    if (missing.length > 0) {
+      alert(`Ada ${missing.length} bagian yang belum lengkap. Mohon periksa kembali form Anda.`)
+    }
   }
 
   if (!isLoaded) return <p>Loading...</p>
@@ -261,7 +294,7 @@ export default function SurveyPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
+        <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-10">
 
           {/* ══ A. IDENTITAS RESPONDEN ═══════════════════════════════════ */}
           <section className="bg-white border border-slate-100 rounded-2xl p-6 space-y-5">
@@ -390,7 +423,7 @@ export default function SurveyPage() {
                       <button
                         key={opt}
                         type="button"
-                        onClick={() => setYnAnswers((prev) => ({ ...prev, [p.id]: opt }))}
+                        onClick={() => setYnAnswer(p.id, opt, p.keDb)}
                         className={`flex-1 py-2 rounded-xl border text-sm font-medium transition-all ${
                           isSelected ? activeClass : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
                         }`}
