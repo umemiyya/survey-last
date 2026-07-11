@@ -3,6 +3,14 @@ import { PageHeader } from '@/components/page-header'
 import { SurveysManager } from '@/components/surveys-manager'
 import { getAllSurveys } from '@/actions/survey'
 
+// FIX: prisma.findMany() di getAllSurveys() bukan panggilan fetch(), jadi
+// Next.js App Router tidak otomatis menandai halaman ini sebagai dynamic.
+// Tanpa baris ini, halaman bisa di-cache secara statis (Full Route Cache)
+// sehingga survey yang baru dihapus/ditambah tidak langsung terlihat di
+// sini walau sudah berubah di database — harus di-redeploy dulu baru
+// ke-refresh. force-dynamic memastikan data selalu diambil ulang tiap request.
+export const dynamic = 'force-dynamic'
+
 export default async function SurveysPage() {
   const surveys = await getAllSurveys()
 

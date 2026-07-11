@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { surveySchema, type SurveyFormData } from '@/lib/schemas'
 import { classifySurvey, FEATURE_WEIGHTS } from '@/lib/classifier'
@@ -38,6 +39,12 @@ export async function submitSurvey(data: SurveyFormData) {
         probabilitas,
       },
     })
+
+    // FIX: tanpa ini, halaman admin (list survey, stats, dsb.) bisa terus
+    // menampilkan data lama dari cache App Router walau survey baru sudah
+    // tersimpan di database.
+    revalidatePath('/', 'layout')
+
     return { success: true, id: survey.id }
   } catch (err) {
     console.error('Gagal menyimpan survey:', err)
@@ -56,6 +63,12 @@ export async function getAllSurveys() {
 export async function deleteSurvey(id: string) {
   try {
     await prisma.survey.delete({ where: { id } })
+
+    // FIX: revalidasi supaya halaman list & dashboard admin langsung
+    // mencerminkan survey yang baru dihapus, bukan hanya state lokal di
+    // client (yang hilang begitu halaman di-refresh atau dibuka ulang).
+    revalidatePath('/', 'layout')
+
     return { success: true }
   } catch (err) {
     console.error('Gagal menghapus survey:', err)
@@ -80,6 +93,11 @@ export async function setSurveyLabel(id: string, label: string) {
   }
   try {
     await prisma.survey.update({ where: { id }, data: { labelManual: label } })
+
+    // FIX: sama seperti di atas — supaya daftar "belum dilabeli" ikut
+    // ter-update begitu satu survey selesai dilabeli.
+    revalidatePath('/', 'layout')
+
     return { success: true }
   } catch (err) {
     console.error('Gagal menyimpan label:', err)
