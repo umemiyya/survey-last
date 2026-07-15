@@ -1,49 +1,96 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { surveySchema, type SurveyFormData } from '@/lib/schemas'
 import { classifySurvey, FEATURE_WEIGHTS } from '@/lib/classifier'
 import { SATISFACTION_LEVELS } from '@/lib/satisfaction'
 
+function avg(...vals: number[]): number {
+  return Math.min(3, Math.max(1, Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)))
+}
+
 export async function submitSurvey(data: SurveyFormData) {
   const parsed = surveySchema.safeParse(data)
-  if (!parsed.success) return { success: false, error: 'Data tidak valid' }
+  if (!parsed.success) {
+    console.error('Validasi gagal:', parsed.error.flatten())
+    return { success: false, error: 'Data tidak valid' }
+  }
+
+  const d = parsed.data
+
+  // Hitung rata-rata per kategori untuk classifier
+  const kualitasAroma     = avg(d.b1_kualitasAroma_1,     d.b1_kualitasAroma_2,     d.b1_kualitasAroma_3)
+  const kebersihanAlat    = avg(d.b2_kebersihanAlat_1,    d.b2_kebersihanAlat_2,    d.b2_kebersihanAlat_3)
+  const ketepatanWaktu    = avg(d.b3_ketepatanWaktu_1,    d.b3_ketepatanWaktu_2,    d.b3_ketepatanWaktu_3)
+  const kecepatanRespon   = avg(d.b4_kecepatanRespon_1,   d.b4_kecepatanRespon_2,   d.b4_kecepatanRespon_3)
+  const pelayananService  = avg(d.b5_pelayananService_1,  d.b5_pelayananService_2,  d.b5_pelayananService_3)
+  const pelayananComplain = avg(d.b6_pelayananComplain_1, d.b6_pelayananComplain_2, d.b6_pelayananComplain_3)
+  const kualitasPengharum = pelayananService // proxy
 
   const { prediksi, probabilitas } = classifySurvey({
-    kualitasPengharum: parsed.data.kualitasPengharum,
-    pelayananService: parsed.data.pelayananService,
-    pelayananComplain: parsed.data.pelayananComplain,
-    kualitasAroma: parsed.data.kualitasAroma,
-    kebersihanAlat: parsed.data.kebersihanAlat,
-    ketepatanWaktu: parsed.data.ketepatanWaktu,
-    kecepatanRespon: parsed.data.kecepatanRespon,
+    kualitasPengharum,
+    pelayananService,
+    pelayananComplain,
+    kualitasAroma,
+    kebersihanAlat,
+    ketepatanWaktu,
+    kecepatanRespon,
   })
 
   try {
     const survey = await prisma.survey.create({
       data: {
-        responden: parsed.data.responden,
-        bulan: parsed.data.bulan,
-        kualitasPengharum: parsed.data.kualitasPengharum,
-        pelayananService: parsed.data.pelayananService,
-        pelayananComplain: parsed.data.pelayananComplain,
-        akanMenggunakan: parsed.data.akanMenggunakan,
-        pelayananDiperpanjang: parsed.data.pelayananDiperpanjang,
-        kualitasAroma: parsed.data.kualitasAroma,
-        kebersihanAlat: parsed.data.kebersihanAlat,
-        ketepatanWaktu: parsed.data.ketepatanWaktu,
-        kecepatanRespon: parsed.data.kecepatanRespon,
-        saran: parsed.data.saran || null,
+        // Bagian A
+        responden:              d.responden,
+        bulan:                  d.bulan,
+        namaPerusahaan:         d.namaPerusahaan || null,
+        jabatan:                d.jabatan || null,
+        periodeLayanan:         d.periodeLayanan || null,
+
+        // Bagian B — sub-pernyataan individual
+        b1_kualitasAroma_1:     d.b1_kualitasAroma_1,
+        b1_kualitasAroma_2:     d.b1_kualitasAroma_2,
+        b1_kualitasAroma_3:     d.b1_kualitasAroma_3,
+        b2_kebersihanAlat_1:    d.b2_kebersihanAlat_1,
+        b2_kebersihanAlat_2:    d.b2_kebersihanAlat_2,
+        b2_kebersihanAlat_3:    d.b2_kebersihanAlat_3,
+        b3_ketepatanWaktu_1:    d.b3_ketepatanWaktu_1,
+        b3_ketepatanWaktu_2:    d.b3_ketepatanWaktu_2,
+        b3_ketepatanWaktu_3:    d.b3_ketepatanWaktu_3,
+        b4_kecepatanRespon_1:   d.b4_kecepatanRespon_1,
+        b4_kecepatanRespon_2:   d.b4_kecepatanRespon_2,
+        b4_kecepatanRespon_3:   d.b4_kecepatanRespon_3,
+        b5_pelayananService_1:  d.b5_pelayananService_1,
+        b5_pelayananService_2:  d.b5_pelayananService_2,
+        b5_pelayananService_3:  d.b5_pelayananService_3,
+        b6_pelayananComplain_1: d.b6_pelayananComplain_1,
+        b6_pelayananComplain_2: d.b6_pelayananComplain_2,
+        b6_pelayananComplain_3: d.b6_pelayananComplain_3,
+
+        // Rata-rata per kategori
+        kualitasPengharum,
+        pelayananService,
+        pelayananComplain,
+        kualitasAroma,
+        kebersihanAlat,
+        ketepatanWaktu,
+        kecepatanRespon,
+
+        // Bagian C
+        akanMenggunakan:        d.akanMenggunakan,
+        pelayananDiperpanjang:  d.pelayananDiperpanjang,
+        bersediaRekomendasikan: d.bersediaRekomendasikan || null,
+        tertarikLayananLain:    d.tertarikLayananLain || null,
+        tetapMemilih:           d.tetapMemilih || null,
+
+        // Bagian D
+        saran: d.saran || null,
+
+        // Hasil klasifikasi
         prediksi,
         probabilitas,
       },
     })
-
-    // FIX: tanpa ini, halaman admin (list survey, stats, dsb.) bisa terus
-    // menampilkan data lama dari cache App Router walau survey baru sudah
-    // tersimpan di database.
-    revalidatePath('/', 'layout')
 
     return { success: true, id: survey.id }
   } catch (err) {
@@ -63,12 +110,6 @@ export async function getAllSurveys() {
 export async function deleteSurvey(id: string) {
   try {
     await prisma.survey.delete({ where: { id } })
-
-    // FIX: revalidasi supaya halaman list & dashboard admin langsung
-    // mencerminkan survey yang baru dihapus, bukan hanya state lokal di
-    // client (yang hilang begitu halaman di-refresh atau dibuka ulang).
-    revalidatePath('/', 'layout')
-
     return { success: true }
   } catch (err) {
     console.error('Gagal menghapus survey:', err)
@@ -78,26 +119,17 @@ export async function deleteSurvey(id: string) {
 
 export async function getSurveysForLabeling() {
   const [unlabeled, labeled] = await Promise.all([
-    prisma.survey.findMany({
-      where: { labelManual: null },
-      orderBy: { createdAt: 'desc' },
-    }),
+    prisma.survey.findMany({ where: { labelManual: null }, orderBy: { createdAt: 'desc' } }),
     prisma.survey.count({ where: { labelManual: { not: null } } }),
   ])
   return { unlabeled, labeledCount: labeled }
 }
 
 export async function setSurveyLabel(id: string, label: string) {
-  if (!SATISFACTION_LEVELS.includes(label as any)) {
+  if (!SATISFACTION_LEVELS.includes(label as any))
     return { success: false, error: 'Label tidak valid' }
-  }
   try {
     await prisma.survey.update({ where: { id }, data: { labelManual: label } })
-
-    // FIX: sama seperti di atas — supaya daftar "belum dilabeli" ikut
-    // ter-update begitu satu survey selesai dilabeli.
-    revalidatePath('/', 'layout')
-
     return { success: true }
   } catch (err) {
     console.error('Gagal menyimpan label:', err)
@@ -110,15 +142,11 @@ export async function exportLabeledDataAsCsv() {
     where: { labelManual: { not: null } },
     orderBy: { createdAt: 'asc' },
   })
-
   const header = [
-    'pelayananService', 'kecepatanRespon', 'kualitasAroma',
-    'kualitasPengharum', 'ketepatanWaktu', 'kebersihanAlat',
-    'pelayananComplain', 'label',
+    'pelayananService','kecepatanRespon','kualitasAroma',
+    'kualitasPengharum','ketepatanWaktu','kebersihanAlat',
+    'pelayananComplain','label',
   ]
-
-  // label: 0 = Tidak Puas, 1 = Puas, 2 = Sangat Puas
-  // @ts-ignore
   const rows = surveys.map((s) => {
     const labelIndex = SATISFACTION_LEVELS.indexOf(s.labelManual as any)
     return [
@@ -127,77 +155,55 @@ export async function exportLabeledDataAsCsv() {
       s.pelayananComplain, labelIndex,
     ].join(',')
   })
-
   return [header.join(','), ...rows].join('\n')
 }
 
 export async function getModelStats() {
   const surveys = await prisma.survey.findMany()
   const total = surveys.length
-
   const distribusi = SATISFACTION_LEVELS.reduce((acc, level) => {
-  // @ts-ignore
     acc[level] = surveys.filter((s) => s.prediksi === level).length
     return acc
   }, {} as Record<string, number>)
-
   const avgOf = (key: keyof typeof FEATURE_WEIGHTS) =>
     total > 0
-  // @ts-ignore
       ? Math.round((surveys.reduce((sum, s) => sum + (s[key] as number), 0) / total) * 10) / 10
       : 0
-
   const featureAverages = (Object.keys(FEATURE_WEIGHTS) as Array<keyof typeof FEATURE_WEIGHTS>).map(
     (key) => ({ key, bobot: FEATURE_WEIGHTS[key], rataRata: avgOf(key) })
   )
-
   return { total, distribusi, featureWeights: FEATURE_WEIGHTS, featureAverages }
 }
 
 const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December',
 ]
 
 export async function getSurveyStats() {
   const currentYear = new Date().getFullYear()
-
   const surveys = await prisma.survey.findMany({
     where: {
       createdAt: {
         gte: new Date(`${currentYear}-01-01T00:00:00Z`),
-        lt: new Date(`${currentYear + 1}-01-01T00:00:00Z`),
+        lt:  new Date(`${currentYear + 1}-01-01T00:00:00Z`),
       },
     },
     orderBy: { createdAt: 'desc' },
   })
-
   const total = surveys.length
-
   const distribusi = SATISFACTION_LEVELS.reduce((acc, level) => {
-  // @ts-ignore
-
     acc[level] = surveys.filter((s) => s.prediksi === level).length
     return acc
   }, {} as Record<string, number>)
-
   const monthlyData = MONTHS.map((month) => {
-  // @ts-ignore
-
-    const monthSurveys = surveys.filter((s) => s.bulan === month)
+    const ms = surveys.filter((s) => s.bulan === month)
     const row: Record<string, number | string> = { name: month.substring(0, 3) }
     for (const level of SATISFACTION_LEVELS) {
-  // @ts-ignore
-
-      row[level] = monthSurveys.filter((s) => s.prediksi === level).length
+      row[level] = ms.filter((s) => s.prediksi === level).length
     }
     return row
   })
-
-  const latest = await prisma.survey.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 20,
-  })
-
+  const latest = await prisma.survey.findMany({ orderBy: { createdAt: 'desc' }, take: 20 })
   return { total, distribusi, monthlyData, latest, year: currentYear }
 }

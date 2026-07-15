@@ -80,8 +80,8 @@ export function SurveysManager({ initialSurveys }: SurveysManagerProps) {
             className="px-4 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
           >
             <option value="all">Semua status</option>
-            <option value="Sangat Puas">Sangat Puas</option>
-            <option value="Puas">Puas</option>
+            <option value="Sangat Puas">Puas</option>
+            <option value="Puas">Cukup Puas</option>
             <option value="Tidak Puas">Tidak Puas</option>
           </select>
         </div>

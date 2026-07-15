@@ -10,110 +10,82 @@ import { submitSurvey } from '@/actions/survey'
 import { useUser } from '@clerk/nextjs'
 
 const months = [
-  'January', 'February', 'March', 'April',
-  'May', 'June', 'July', 'August',
-  'September', 'October', 'November', 'December',
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December',
 ]
 
-const LIKERT = [
-  { label: 'Tidak Puas', value: 1 },
-  { label: 'Cukup Puas', value: 2 },
-  { label: 'Puas',       value: 3 },
+const LIKERT_OPTIONS = [
+  { label: 'Pilih penilaian...', value: '' },
+  { label: '1 - Tidak Puas',    value: 1  },
+  { label: '2 - Cukup Puas',    value: 2  },
+  { label: '3 - Puas',          value: 3  },
 ]
 
-// ── Sub-pernyataan per kategori ──────────────────────────────────────────────
-// Tiap kategori punya 3 sub-pernyataan yang dinilai, hasilnya dirata-rata
-// menjadi 1 nilai integer (1-3) yang dikirim ke database.
-
-const KATEGORI = [
+// Struktur lengkap kuesioner Bagian B
+const BAGIAN_B = [
   {
-    key: 'kualitasAroma' as const,
+    nomor: 'B1',
     judul: 'Kualitas Aroma',
-    pernyataan: [
-      'Aroma pengharum ruangan memberikan kesan yang nyaman.',
-      'Aroma pengharum sesuai dengan kebutuhan ruangan.',
-      'Aroma pengharum bertahan sesuai harapan.',
+    fields: [
+      { name: 'b1_kualitasAroma_1' as const, teks: 'Aroma pengharum ruangan memberikan kesan yang nyaman.' },
+      { name: 'b1_kualitasAroma_2' as const, teks: 'Aroma pengharum sesuai dengan kebutuhan ruangan.' },
+      { name: 'b1_kualitasAroma_3' as const, teks: 'Aroma pengharum bertahan sesuai harapan.' },
     ],
   },
   {
-    key: 'kebersihanAlat' as const,
+    nomor: 'B2',
     judul: 'Ketahanan & Kebersihan Alat',
-    pernyataan: [
-      'Alat pengharum berfungsi dengan baik selama digunakan.',
-      'Alat jarang mengalami gangguan atau kerusakan.',
-      'Kondisi alat pengharum selalu bersih dan terawat.',
+    fields: [
+      { name: 'b2_kebersihanAlat_1' as const, teks: 'Alat pengharum berfungsi dengan baik selama digunakan.' },
+      { name: 'b2_kebersihanAlat_2' as const, teks: 'Alat jarang mengalami gangguan atau kerusakan.' },
+      { name: 'b2_kebersihanAlat_3' as const, teks: 'Kondisi alat pengharum selalu bersih dan terawat.' },
     ],
   },
   {
-    key: 'ketepatanWaktu' as const,
+    nomor: 'B3',
     judul: 'Ketepatan Waktu Perawatan',
-    pernyataan: [
-      'Petugas melakukan perawatan sesuai jadwal.',
-      'Penggantian isi pengharum dilakukan tepat waktu.',
-      'Perawatan dilakukan secara rutin dan konsisten.',
+    fields: [
+      { name: 'b3_ketepatanWaktu_1' as const, teks: 'Petugas melakukan perawatan sesuai jadwal.' },
+      { name: 'b3_ketepatanWaktu_2' as const, teks: 'Penggantian isi pengharum dilakukan tepat waktu.' },
+      { name: 'b3_ketepatanWaktu_3' as const, teks: 'Perawatan dilakukan secara rutin dan konsisten.' },
     ],
   },
   {
-    key: 'kecepatanRespon' as const,
+    nomor: 'B4',
     judul: 'Responsivitas Layanan',
-    pernyataan: [
-      'Petugas merespons keluhan dengan cepat.',
-      'Petugas memberikan solusi yang sesuai.',
-      'Keluhan pelanggan ditindaklanjuti dengan baik.',
+    fields: [
+      { name: 'b4_kecepatanRespon_1' as const, teks: 'Petugas merespons keluhan dengan cepat.' },
+      { name: 'b4_kecepatanRespon_2' as const, teks: 'Petugas memberikan solusi yang sesuai.' },
+      { name: 'b4_kecepatanRespon_3' as const, teks: 'Keluhan pelanggan ditindaklanjuti dengan baik.' },
     ],
   },
   {
-    key: 'pelayananService' as const,
+    nomor: 'B5',
     judul: 'Kualitas Pengharum & Pelayanan Service',
-    pernyataan: [
-      'Kualitas pengharum sesuai standar yang dijanjikan.',
-      'Pelayanan service dilakukan secara profesional.',
-      'Petugas bersikap ramah dan membantu.',
+    fields: [
+      { name: 'b5_pelayananService_1' as const, teks: 'Kualitas pengharum sesuai standar yang dijanjikan.' },
+      { name: 'b5_pelayananService_2' as const, teks: 'Pelayanan service dilakukan secara profesional.' },
+      { name: 'b5_pelayananService_3' as const, teks: 'Petugas bersikap ramah dan membantu.' },
     ],
   },
   {
-    key: 'pelayananComplain' as const,
+    nomor: 'B6',
     judul: 'Kepuasan Keseluruhan & Penanganan Keluhan',
-    pernyataan: [
-      'Secara keseluruhan saya puas terhadap layanan PT Pink Service Indonesia.',
-      'Penanganan komplain dilakukan dengan cepat dan tepat.',
-      'Saya merasa layanan yang diberikan sesuai dengan nilai yang dibayarkan.',
+    fields: [
+      { name: 'b6_pelayananComplain_1' as const, teks: 'Secara keseluruhan saya puas terhadap layanan PT Pink Service Indonesia.' },
+      { name: 'b6_pelayananComplain_2' as const, teks: 'Penanganan komplain dilakukan dengan cepat dan tepat.' },
+      { name: 'b6_pelayananComplain_3' as const, teks: 'Saya merasa layanan yang diberikan sesuai dengan nilai yang dibayarkan.' },
     ],
   },
 ]
 
-// 5 pertanyaan Ya/Tidak dari Bagian C kuesioner
-// Hanya 2 yang masuk ke DB (akanMenggunakan & pelayananDiperpanjang),
-// sisanya hanya ditampilkan di UI tanpa disimpan ke database.
-const PERTANYAAN_YN = [
-  {
-    id: 'akanMenggunakan',
-    teks: 'Saya bersedia menggunakan kembali layanan PT Pink Service Indonesia.',
-    keDb: true,
-  },
-  {
-    id: 'pelayananDiperpanjang',
-    teks: 'Saya bersedia memperpanjang kontrak layanan.',
-    keDb: true,
-  },
-  {
-    id: 'rekomendasikan',
-    teks: 'Saya bersedia merekomendasikan layanan PT Pink Service Indonesia kepada pihak lain.',
-    keDb: false,
-  },
-  {
-    id: 'layananLain',
-    teks: 'Saya tertarik menggunakan layanan lain yang ditawarkan perusahaan.',
-    keDb: false,
-  },
-  {
-    id: 'tetapMemilih',
-    teks: 'Saya tetap memilih PT Pink Service Indonesia sebagai penyedia layanan hygiene.',
-    keDb: false,
-  },
+const BAGIAN_C = [
+  { name: 'akanMenggunakan'        as const, teks: 'Saya bersedia menggunakan kembali layanan PT Pink Service Indonesia.', wajib: true },
+  { name: 'pelayananDiperpanjang'  as const, teks: 'Saya bersedia memperpanjang kontrak layanan.', wajib: true },
+  { name: 'bersediaRekomendasikan' as const, teks: 'Saya bersedia merekomendasikan layanan PT Pink Service Indonesia kepada pihak lain.', wajib: false },
+  { name: 'tertarikLayananLain'    as const, teks: 'Saya tertarik menggunakan layanan lain yang ditawarkan perusahaan.', wajib: false },
+  { name: 'tetapMemilih'           as const, teks: 'Saya tetap memilih PT Pink Service Indonesia sebagai penyedia layanan hygiene.', wajib: false },
 ]
-
-// ── Helper components ────────────────────────────────────────────────────────
 
 function SectionHeader({ label }: { label: string }) {
   return (
@@ -126,28 +98,27 @@ function SectionHeader({ label }: { label: string }) {
 function LikertSelect({
   value,
   onChange,
+  hasError,
 }: {
-  value: number | null
+  value: number | undefined
   onChange: (val: number) => void
+  hasError?: boolean
 }) {
   const colorClass =
-    value === 1
-      ? 'border-red-300 text-red-700 bg-red-50'
-      : value === 2
-        ? 'border-amber-300 text-amber-700 bg-amber-50'
-        : value === 3
-          ? 'border-blue-400 text-blue-700 bg-blue-50'
-          : 'border-slate-200 text-slate-400 bg-white'
+    value === 1 ? 'border-red-300 text-red-700 bg-red-50'
+    : value === 2 ? 'border-amber-300 text-amber-700 bg-amber-50'
+    : value === 3 ? 'border-blue-400 text-blue-700 bg-blue-50'
+    : hasError ? 'border-red-300 text-slate-400 bg-white'
+    : 'border-slate-200 text-slate-400 bg-white'
 
   return (
     <select
       value={value ?? ''}
-      onChange={(e) => onChange(Number(e.target.value))}
+      onChange={(e) => { if (e.target.value) onChange(Number(e.target.value)) }}
       className={`w-full px-3 py-2 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 transition-colors ${colorClass}`}
     >
-      <option value="" disabled>Pilih penilaian...</option>
-      {LIKERT.map((opt) => (
-        <option key={opt.value} value={opt.value}>
+      {LIKERT_OPTIONS.map((opt) => (
+        <option key={String(opt.value)} value={opt.value} disabled={opt.value === ''}>
           {opt.label}
         </option>
       ))}
@@ -155,29 +126,10 @@ function LikertSelect({
   )
 }
 
-// Rata-rata 3 nilai Likert, dibulatkan ke integer 1-3
-function avgLikert(vals: (number | null)[]): number {
-  const valid = vals.filter((v): v is number => v !== null && v > 0)
-  if (valid.length === 0) return 0
-  return Math.min(3, Math.max(1, Math.round(valid.reduce((a, b) => a + b, 0) / valid.length)))
-}
-
-// ── Main component ───────────────────────────────────────────────────────────
-
 export default function SurveyPage() {
   const router = useRouter()
   const { user, isLoaded } = useUser()
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // State sub-pernyataan: key = `${kategoriKey}_${index}`, value = 1|2|3|null
-  const [subRatings, setSubRatings] = useState<Record<string, number | null>>({})
-
-  // State Ya/Tidak untuk semua 5 pertanyaan (termasuk yang tidak ke DB)
-  const [ynAnswers, setYnAnswers] = useState<Record<string, string>>({})
-
-  // Identitas tambahan (tidak masuk DB)
-  const [namaPerusahaan, setNamaPerusahaan] = useState('')
-  const [jabatan, setJabatan] = useState('')
   const [periodeLayanan, setPeriodeLayanan] = useState('')
 
   const {
@@ -188,97 +140,30 @@ export default function SurveyPage() {
     formState: { errors },
   } = useForm<SurveyFormData>({
     resolver: zodResolver(surveySchema),
-    defaultValues: {
-      responden: '',
-      bulan: '',
-      kualitasPengharum: 0,
-      pelayananService: 0,
-      pelayananComplain: 0,
-      akanMenggunakan: '',
-      pelayananDiperpanjang: '',
-      kualitasAroma: 0,
-      kebersihanAlat: 0,
-      ketepatanWaktu: 0,
-      kecepatanRespon: 0,
-      saran: '',
-    },
   })
-
-  const setSubRating = (key: string, idx: number, val: number) => {
-    const fieldKey = `${key}_${idx}`
-    setSubRatings((prev) => {
-      const next = { ...prev, [fieldKey]: val }
-      // Hitung rata-rata 3 sub-pernyataan kategori ini → set ke form
-      const vals = [0, 1, 2].map((i) => next[`${key}_${i}`] ?? null)
-      const avg = avgLikert(vals)
-      if (avg > 0) {
-        setValue(key as any, avg, { shouldValidate: true })
-        // FIX: kualitasPengharum tidak punya kategori UI sendiri di kuesioner
-        // baru — field ini di-proxy dari pelayananService. Sebelumnya hanya
-        // di-set saat onSubmit (yang tidak pernah tercapai karena Zod
-        // menolak duluan akibat nilai default 0 pada kualitasPengharum).
-        if (key === 'pelayananService') {
-          setValue('kualitasPengharum' as any, avg, { shouldValidate: true })
-        }
-      }
-      return next
-    })
-  }
-
-  // FIX: sinkronkan jawaban Ya/Tidak ke react-hook-form untuk field yang
-  // masuk DB (akanMenggunakan, pelayananDiperpanjang). Sebelumnya jawaban
-  // hanya disimpan di state lokal `ynAnswers` dan tidak pernah di-`setValue`,
-  // sehingga Zod selalu melihat string kosong ('') dan memblokir submit.
-  const setYnAnswer = (id: string, opt: string, keDb: boolean) => {
-    setYnAnswers((prev) => ({ ...prev, [id]: opt }))
-    if (keDb) {
-      setValue(id as keyof SurveyFormData, opt as any, { shouldValidate: true })
-    }
-  }
 
   const onSubmit = async (data: SurveyFormData) => {
     setIsSubmitting(true)
-
-    // kualitasPengharum sudah disinkronkan live via setValue di setSubRating
-    // (lihat FIX di atas), jadi di sini tidak perlu proxy manual lagi —
-    // tapi tetap dijaga sebagai fallback kalau-kalau belum ter-set.
     const finalData = {
       ...data,
-      kualitasPengharum: data.kualitasPengharum || data.pelayananService,
-      akanMenggunakan: ynAnswers['akanMenggunakan'] || '',
-      pelayananDiperpanjang: ynAnswers['pelayananDiperpanjang'] || '',
+      periodeLayanan,
       responden: `${data.responden} - ${
-        user?.fullName ?? user?.emailAddresses[0].emailAddress ?? ''
+        user?.fullName ?? user?.emailAddresses[0]?.emailAddress ?? ''
       }`,
     }
-
     const result = await submitSurvey(finalData)
     setIsSubmitting(false)
-
     if (!result.success) {
       alert(result.error || 'Terjadi kesalahan saat mengirim survey.')
       return
     }
-
     router.push(`/user/result?id=${result.id}`)
   }
 
-  // FIX: tanpa handler ini, kegagalan validasi Zod diam-diam menghentikan
-  // submit tanpa feedback apapun ke user (tombol "Kirim Survey" terasa
-  // seperti tidak berfungsi). Sekarang user diberi tahu bagian mana yang
-  // belum lengkap, dan detailnya masuk ke console untuk debugging.
-  const onInvalid = (formErrors: typeof errors) => {
-    console.log('Validation failed:', formErrors)
-    const missing = Object.keys(formErrors)
-    if (missing.length > 0) {
-      alert(`Ada ${missing.length} bagian yang belum lengkap. Mohon periksa kembali form Anda.`)
-    }
-  }
-
-  if (!isLoaded) return <p>Loading...</p>
+  if (!isLoaded) return <p className="p-8 text-center text-slate-400">Loading...</p>
 
   return (
-    <main className="min-h-screen bg-white py-12">
+    <main className="min-h-screen bg-slate-50 py-12">
       <div className="max-w-2xl mx-auto px-6">
 
         {/* Header */}
@@ -290,13 +175,18 @@ export default function SurveyPage() {
             Kuesioner Kepuasan Pelanggan
           </h1>
           <p className="text-sm text-slate-400">
-            Halo, {user?.fullName || ''}. Berikan tanda pilihan pada setiap pernyataan berikut.
+            Halo, {user?.fullName || ''}. Berikan penilaian Anda pada setiap pernyataan berikut.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-10">
+        <form
+          onSubmit={handleSubmit(onSubmit, () => {
+            alert('Mohon lengkapi semua field yang wajib diisi (*)')
+          })}
+          className="space-y-6"
+        >
 
-          {/* ══ A. IDENTITAS RESPONDEN ═══════════════════════════════════ */}
+          {/* ══ A. IDENTITAS ══════════════════════════════════════════ */}
           <section className="bg-white border border-slate-100 rounded-2xl p-6 space-y-5">
             <SectionHeader label="A. Identitas Responden" />
 
@@ -304,9 +194,8 @@ export default function SurveyPage() {
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700 block">Nama Perusahaan</label>
                 <input
+                  {...register('namaPerusahaan')}
                   type="text"
-                  value={namaPerusahaan}
-                  onChange={(e) => setNamaPerusahaan(e.target.value)}
                   placeholder="PT / CV ..."
                   className="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                 />
@@ -326,9 +215,8 @@ export default function SurveyPage() {
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700 block">Jabatan</label>
                 <input
+                  {...register('jabatan')}
                   type="text"
-                  value={jabatan}
-                  onChange={(e) => setJabatan(e.target.value)}
                   placeholder="Manajer / Supervisor / ..."
                   className="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                 />
@@ -350,11 +238,14 @@ export default function SurveyPage() {
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-700 block">Periode Menggunakan Layanan</label>
               <div className="flex flex-wrap gap-2">
-                {['<6 Bulan', '6 Bulan – 1 Tahun', '>1 Tahun'].map((opt) => (
+                {['< 6 Bulan', '6 Bulan – 1 Tahun', '> 1 Tahun'].map((opt) => (
                   <button
                     key={opt}
                     type="button"
-                    onClick={() => setPeriodeLayanan(opt)}
+                    onClick={() => {
+                      setPeriodeLayanan(opt)
+                      setValue('periodeLayanan', opt)
+                    }}
                     className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
                       periodeLayanan === opt
                         ? 'bg-blue-600 border-blue-600 text-white'
@@ -368,91 +259,92 @@ export default function SurveyPage() {
             </div>
           </section>
 
-          {/* ══ B. PENILAIAN KEPUASAN ════════════════════════════════════ */}
+          {/* ══ B. PENILAIAN ══════════════════════════════════════════ */}
           <section className="bg-white border border-slate-100 rounded-2xl p-6 space-y-8">
             <div>
               <SectionHeader label="B. Penilaian Kepuasan Pelanggan" />
-              <p className="text-xs text-slate-400 -mt-3 mb-0">
-                Skala: 1 = Tidak Puas &nbsp;·&nbsp; 2 = Cukup Puas &nbsp;·&nbsp; 3 = Puas
+              <p className="text-xs text-slate-400 -mt-3">
+                1 = Tidak Puas &nbsp;·&nbsp; 2 = Cukup Puas &nbsp;·&nbsp; 3 = Puas
               </p>
             </div>
 
-            {KATEGORI.map((kat) => {
-              const fieldError = errors[kat.key]
+            {BAGIAN_B.map((kat) => (
+              <div key={kat.nomor}>
+                <p className="text-sm font-semibold text-slate-900 mb-3">
+                  {kat.nomor}. {kat.judul}
+                </p>
+                <div className="space-y-3">
+                  {kat.fields.map((field, idx) => {
+                    const val = watch(field.name) as number | undefined
+                    const err = errors[field.name]
+                    return (
+                      <div key={field.name} className="bg-slate-50 rounded-xl p-3.5">
+                        <p className="text-sm text-slate-600 mb-2.5 leading-snug">
+                          {kat.nomor}.{idx + 1}. {field.teks}
+                        </p>
+                        <LikertSelect
+                          value={val}
+                          onChange={(v) => setValue(field.name, v, { shouldValidate: true })}
+                          hasError={!!err}
+                        />
+                        {err && <p className="text-xs text-red-600 mt-1">Pertanyaan ini harus diisi</p>}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </section>
+
+          {/* ══ C. KESEDIAAN ══════════════════════════════════════════ */}
+          <section className="bg-white border border-slate-100 rounded-2xl p-6 space-y-4">
+            <SectionHeader label="C. Kesediaan Menggunakan Layanan" />
+
+            {BAGIAN_C.map((p, i) => {
+              const val = watch(p.name)
+              const err = errors[p.name]
               return (
-                <div key={kat.key}>
-                  <p className="text-sm font-semibold text-slate-900 mb-3">{kat.judul}</p>
-                  <div className="space-y-3">
-                    {kat.pernyataan.map((teks, idx) => {
-                      const currentVal = subRatings[`${kat.key}_${idx}`] ?? null
-                      return (
-                        <div key={idx} className="bg-slate-50/60 rounded-xl p-3.5">
-                          <p className="text-sm text-slate-600 mb-2.5 leading-snug">{idx + 1}. {teks}</p>
-                          <LikertSelect
-                            value={currentVal}
-                            onChange={(val) => setSubRating(kat.key, idx, val)}
-                          />
-                        </div>
-                      )
-                    })}
+                <div key={p.name} className="bg-slate-50 rounded-xl p-3.5">
+                  <p className="text-sm text-slate-600 mb-3 leading-snug">
+                    C.{i + 1}. {p.teks} {p.wajib && <span className="text-red-500">*</span>}
+                  </p>
+                  <div className="flex gap-2">
+                    {['Ya', 'Tidak'].map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setValue(p.name, opt, { shouldValidate: p.wajib })}
+                        className={`flex-1 py-2 rounded-xl border text-sm font-medium transition-all ${
+                          val === opt
+                            ? opt === 'Ya'
+                              ? 'bg-blue-600 border-blue-600 text-white'
+                              : 'bg-red-50 border-red-400 text-red-700'
+                            : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
                   </div>
-                  {fieldError && (
-                    <p className="text-xs text-red-600 mt-2">
-                      Semua pernyataan di bagian ini harus diisi
-                    </p>
-                  )}
+                  {err && <p className="text-xs text-red-600 mt-1.5">Pilihan harus dipilih</p>}
                 </div>
               )
             })}
           </section>
 
-          {/* ══ C. KESEDIAAN MENGGUNAKAN LAYANAN ════════════════════════ */}
-          <section className="bg-white border border-slate-100 rounded-2xl p-6 space-y-4">
-            <SectionHeader label="C. Kesediaan Menggunakan Layanan" />
-
-            {PERTANYAAN_YN.map((p, i) => (
-              <div key={p.id} className="bg-slate-50/60 rounded-xl p-3.5">
-                <p className="text-sm text-slate-600 mb-3 leading-snug">{i + 1}. {p.teks}</p>
-                <div className="flex gap-2">
-                  {['Ya', 'Tidak'].map((opt) => {
-                    const isSelected = ynAnswers[p.id] === opt
-                    const activeClass = opt === 'Ya'
-                      ? 'bg-blue-600 border-blue-600 text-white'
-                      : 'bg-red-50 border-red-400 text-red-700'
-                    return (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => setYnAnswer(p.id, opt, p.keDb)}
-                        className={`flex-1 py-2 rounded-xl border text-sm font-medium transition-all ${
-                          isSelected ? activeClass : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    )
-                  })}
-                </div>
-                {p.keDb && errors[p.id as keyof SurveyFormData] && (
-                  <p className="text-xs text-red-600 mt-1.5">Pilihan harus dipilih</p>
-                )}
-              </div>
-            ))}
-          </section>
-
-          {/* ══ D. KRITIK DAN SARAN ══════════════════════════════════════ */}
+          {/* ══ D. SARAN ══════════════════════════════════════════════ */}
           <section className="bg-white border border-slate-100 rounded-2xl p-6 space-y-3">
             <SectionHeader label="D. Kritik dan Saran" />
             <textarea
               {...register('saran')}
-              placeholder="Tuliskan kritik dan saran Anda untuk PT Pink Service Indonesia (opsional)"
+              placeholder="Tuliskan kritik dan saran Anda (opsional)"
               rows={4}
               className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 resize-none"
             />
           </section>
 
-          {/* ══ TOMBOL ═══════════════════════════════════════════════════ */}
-          <div className="flex gap-3">
+          {/* ══ TOMBOL ════════════════════════════════════════════════ */}
+          <div className="flex gap-3 pb-8">
             <Button
               type="button"
               variant="outline"

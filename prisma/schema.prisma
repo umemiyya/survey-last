@@ -8,25 +8,67 @@ datasource db {
 
 model Survey {
   id                     String   @id @default(uuid())
+
+  // ── Bagian A: Identitas ───────────────────────────────────────────
   responden              String
   bulan                  String
-  kualitasPengharum      Int
+  namaPerusahaan         String?
+  jabatan                String?
+  periodeLayanan         String?
+
+  // ── Bagian B: Penilaian — sub-pernyataan individual (1-3) ─────────
+  // B1: Kualitas Aroma
+  b1_kualitasAroma_1     Int?
+  b1_kualitasAroma_2     Int?
+  b1_kualitasAroma_3     Int?
+
+  // B2: Ketahanan & Kebersihan Alat
+  b2_kebersihanAlat_1    Int?
+  b2_kebersihanAlat_2    Int?
+  b2_kebersihanAlat_3    Int?
+
+  // B3: Ketepatan Waktu Perawatan
+  b3_ketepatanWaktu_1    Int?
+  b3_ketepatanWaktu_2    Int?
+  b3_ketepatanWaktu_3    Int?
+
+  // B4: Responsivitas Layanan
+  b4_kecepatanRespon_1   Int?
+  b4_kecepatanRespon_2   Int?
+  b4_kecepatanRespon_3   Int?
+
+  // B5: Kualitas Pengharum & Pelayanan Service
+  b5_pelayananService_1  Int?
+  b5_pelayananService_2  Int?
+  b5_pelayananService_3  Int?
+
+  // B6: Kepuasan Keseluruhan & Penanganan Keluhan
+  b6_pelayananComplain_1 Int?
+  b6_pelayananComplain_2 Int?
+  b6_pelayananComplain_3 Int?
+
+  // ── Field agregat (rata-rata B per kategori) — untuk classifier ───
+  kualitasPengharum      Int      // proxy dari pelayananService
   pelayananService       Int
   pelayananComplain      Int
-  akanMenggunakan        String
-  pelayananDiperpanjang  String
   kualitasAroma          Int
   kebersihanAlat         Int
   ketepatanWaktu         Int
   kecepatanRespon        Int
+
+  // ── Bagian C: Kesediaan ───────────────────────────────────────────
+  akanMenggunakan        String
+  pelayananDiperpanjang  String
+  bersediaRekomendasikan String?
+  tertarikLayananLain    String?
+  tetapMemilih           String?
+
+  // ── Bagian D: Saran ───────────────────────────────────────────────
   saran                  String?
+
+  // ── Hasil klasifikasi ─────────────────────────────────────────────
   prediksi               String?
   probabilitas           Int?
-
-  // Label manual untuk training Random Forest nantinya.
-  // Diisi oleh admin lewat halaman labeling, terpisah dari `prediksi`
-  // (yang merupakan hasil rule-based classifier, bukan ground truth).
-  // Nilai: "Tidak Puas" | "Puas" | "Sangat Puas" | null (belum dilabel)
   labelManual            String?
 
   createdAt              DateTime @default(now())
