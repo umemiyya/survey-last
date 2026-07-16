@@ -1,5 +1,6 @@
 import { getSurveyById } from "@/actions/survey"
 import { notFound } from "next/navigation"
+import { PrintActions } from "@/components/print-actions"
 
 const LIKERT_LABEL: Record<number, string> = {
   1: 'Tidak Puas',
@@ -79,21 +80,7 @@ export default async function PrintPage({
         body { font-family: 'Times New Roman', serif; color: #000; }
       `}</style>
 
-      {/* Tombol cetak — hilang saat print */}
-      <div className="no-print fixed top-4 right-4 z-50 flex gap-2">
-        <button
-          onClick={() => window.print()}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
-        >
-          Cetak / Simpan PDF
-        </button>
-        <button
-          onClick={() => window.close()}
-          className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200"
-        >
-          Tutup
-        </button>
-      </div>
+      <PrintActions />
 
       <div className="max-w-2xl mx-auto p-8 text-[13px] leading-relaxed">
 
