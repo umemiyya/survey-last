@@ -9,12 +9,11 @@ import {
   FileText,
   LogOut,
 } from 'lucide-react'
-import { UserButton, UserProfile } from '@clerk/nextjs'
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/surveys', label: 'Survey', icon: ClipboardList },
-  { href: '/admin/classification', label: 'Klasifikasi', icon: BarChart3 },
+  { href: '/admin/classification', label: 'Klasifikasi', icon: FileText },
   { href: '/admin/labeling', label: 'Labeling', icon: BarChart3 },
 ]
 
@@ -48,14 +47,6 @@ export function AdminSidebar() {
           )
         })}
       </nav>
-
-      <div className="p-6 border-t border-border">
-        <Link href="/login">
-          <div className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
-            <UserButton />
-          </div>
-        </Link>
-      </div>
     </aside>
   )
 }

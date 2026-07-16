@@ -1,13 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import { surveySchema, type SurveyFormData } from '@/lib/schemas'
 import { submitSurvey } from '@/actions/survey'
-import { useUser } from '@clerk/nextjs'
 
 const months = [
   'January','February','March','April','May','June',
@@ -21,7 +20,6 @@ const LIKERT_OPTIONS = [
   { label: '3 - Puas',          value: 3  },
 ]
 
-// Struktur lengkap kuesioner Bagian B
 const BAGIAN_B = [
   {
     nomor: 'B1',
@@ -128,9 +126,17 @@ function LikertSelect({
 
 export default function SurveyPage() {
   const router = useRouter()
-  const { user, isLoaded } = useUser()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [periodeLayanan, setPeriodeLayanan] = useState('')
+  const [username, setUsername] = useState('')
+
+  // Ambil username dari session custom (bukan Clerk)
+  useEffect(() => {
+    fetch('/api/me')
+      .then((r) => r.json())
+      .then((d) => { if (d.username) setUsername(d.username) })
+      .catch(() => {})
+  }, [])
 
   const {
     register,
@@ -147,9 +153,7 @@ export default function SurveyPage() {
     const finalData = {
       ...data,
       periodeLayanan,
-      responden: `${data.responden} - ${
-        user?.fullName ?? user?.emailAddresses[0]?.emailAddress ?? ''
-      }`,
+      responden: `${data.responden} (${username})`,
     }
     const result = await submitSurvey(finalData)
     setIsSubmitting(false)
@@ -159,8 +163,6 @@ export default function SurveyPage() {
     }
     router.push(`/user/result?id=${result.id}`)
   }
-
-  if (!isLoaded) return <p className="p-8 text-center text-slate-400">Loading...</p>
 
   return (
     <main className="min-h-screen bg-slate-50 py-12">
@@ -175,7 +177,7 @@ export default function SurveyPage() {
             Kuesioner Kepuasan Pelanggan
           </h1>
           <p className="text-sm text-slate-400">
-            Halo, {user?.fullName || ''}. Berikan penilaian Anda pada setiap pernyataan berikut.
+            Halo, {username || 'Pelanggan'}. Berikan penilaian Anda pada setiap pernyataan berikut.
           </p>
         </div>
 
@@ -186,7 +188,7 @@ export default function SurveyPage() {
           className="space-y-6"
         >
 
-          {/* ══ A. IDENTITAS ══════════════════════════════════════════ */}
+          {/* ══ A. IDENTITAS ════════════════════════════════════════ */}
           <section className="bg-white border border-slate-100 rounded-2xl p-6 space-y-5">
             <SectionHeader label="A. Identitas Responden" />
 
@@ -259,7 +261,7 @@ export default function SurveyPage() {
             </div>
           </section>
 
-          {/* ══ B. PENILAIAN ══════════════════════════════════════════ */}
+          {/* ══ B. PENILAIAN ════════════════════════════════════════ */}
           <section className="bg-white border border-slate-100 rounded-2xl p-6 space-y-8">
             <div>
               <SectionHeader label="B. Penilaian Kepuasan Pelanggan" />
@@ -296,7 +298,7 @@ export default function SurveyPage() {
             ))}
           </section>
 
-          {/* ══ C. KESEDIAAN ══════════════════════════════════════════ */}
+          {/* ══ C. KESEDIAAN ════════════════════════════════════════ */}
           <section className="bg-white border border-slate-100 rounded-2xl p-6 space-y-4">
             <SectionHeader label="C. Kesediaan Menggunakan Layanan" />
 
@@ -332,7 +334,7 @@ export default function SurveyPage() {
             })}
           </section>
 
-          {/* ══ D. SARAN ══════════════════════════════════════════════ */}
+          {/* ══ D. SARAN ════════════════════════════════════════════ */}
           <section className="bg-white border border-slate-100 rounded-2xl p-6 space-y-3">
             <SectionHeader label="D. Kritik dan Saran" />
             <textarea
@@ -343,7 +345,7 @@ export default function SurveyPage() {
             />
           </section>
 
-          {/* ══ TOMBOL ════════════════════════════════════════════════ */}
+          {/* ══ TOMBOL ══════════════════════════════════════════════ */}
           <div className="flex gap-3 pb-8">
             <Button
               type="button"

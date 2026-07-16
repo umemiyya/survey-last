@@ -3,8 +3,9 @@
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { DataTable } from '@/components/data-table'
-import { Search, Trash2, Eye } from 'lucide-react'
+import { Search, Trash2, Eye, FileDown } from 'lucide-react'
 import { deleteSurvey } from '@/actions/survey'
+import { getSatisfactionBadgeClass } from '@/lib/satisfaction'
 
 interface Survey {
   id: string
@@ -29,23 +30,15 @@ export function SurveysManager({ initialSurveys }: SurveysManagerProps) {
 
   const filteredSurveys = useMemo(() => {
     let result = surveys
-
-    if (filter !== 'all') {
-      result = result.filter((s) => s.prediksi === filter)
-    }
-
-    if (search) {
-      result = result.filter((s) =>
-        s.responden.toLowerCase().includes(search.toLowerCase())
-      )
-    }
-
+    if (filter !== 'all') result = result.filter((s) => s.prediksi === filter)
+    if (search) result = result.filter((s) =>
+      s.responden.toLowerCase().includes(search.toLowerCase())
+    )
     return result
   }, [surveys, search, filter])
 
   const handleDelete = (id: string) => {
     if (!confirm('Apakah Anda yakin ingin menghapus survey ini?')) return
-
     setDeletingId(id)
     startTransition(async () => {
       const result = await deleteSurvey(id)
@@ -73,19 +66,17 @@ export function SurveysManager({ initialSurveys }: SurveysManagerProps) {
               className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
             />
           </div>
-
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className="px-4 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
           >
             <option value="all">Semua status</option>
-            <option value="Sangat Puas">Puas</option>
-            <option value="Puas">Cukup Puas</option>
+            <option value="Sangat Puas">Sangat Puas</option>
+            <option value="Puas">Puas</option>
             <option value="Tidak Puas">Tidak Puas</option>
           </select>
         </div>
-
         <p className="text-sm text-slate-400">
           Menampilkan {filteredSurveys.length} dari {surveys.length} survey
         </p>
@@ -100,26 +91,18 @@ export function SurveysManager({ initialSurveys }: SurveysManagerProps) {
             {
               key: 'pelayananService',
               label: 'Pelayanan',
-              render: (value: number) => `${value}/5`,
+              render: (value: number) => `${value}/3`,
             },
             {
               key: 'kecepatanRespon',
               label: 'Respon',
-              render: (value: number) => `${value}/5`,
+              render: (value: number) => `${value}/3`,
             },
             {
               key: 'prediksi',
               label: 'Prediksi',
               render: (value: string) => (
-                <span
-                  className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                    value === 'Sangat Puas'
-                      ? 'bg-blue-50 text-blue-700'
-                      : value === 'Puas'
-                        ? 'bg-blue-50/60 text-blue-600'
-                        : 'bg-red-50 text-red-600'
-                  }`}
-                >
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${getSatisfactionBadgeClass(value)}`}>
                   {value}
                 </span>
               ),
@@ -129,6 +112,7 @@ export function SurveysManager({ initialSurveys }: SurveysManagerProps) {
               label: 'Aksi',
               render: (value: string) => (
                 <div className="flex items-center gap-1">
+                  {/* Lihat detail */}
                   <button
                     onClick={() => router.push(`/user/result?id=${value}`)}
                     className="p-1.5 hover:bg-slate-50 rounded-lg transition-colors text-slate-400 hover:text-blue-600"
@@ -136,6 +120,19 @@ export function SurveysManager({ initialSurveys }: SurveysManagerProps) {
                   >
                     <Eye className="w-4 h-4" />
                   </button>
+
+                  {/* Unduh laporan PDF */}
+                  <a
+                    href={`/user/result/print/${value}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 hover:bg-slate-50 rounded-lg transition-colors text-slate-400 hover:text-blue-600"
+                    title="Unduh laporan PDF"
+                  >
+                    <FileDown className="w-4 h-4" />
+                  </a>
+
+                  {/* Hapus */}
                   <button
                     onClick={() => handleDelete(value)}
                     disabled={isPending && deletingId === value}

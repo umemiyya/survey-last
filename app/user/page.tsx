@@ -7,25 +7,24 @@ import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { Clock, CheckCircle, TrendingUp } from 'lucide-react'
 import { getAllSurveys } from '@/actions/survey'
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { getSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
 
 export default async function UserDashboard() {
-  const { userId } = await auth()
-  const user = await currentUser()
+  const session = await getSession()
+
+  // Belum login → halaman login
+  if (!session) redirect('/login')
+
+  // Admin nyasar ke /user → arahkan ke dashboard admin
+  if (session.role === 'admin') redirect('/admin/dashboard')
 
   const surveys = await getAllSurveys()
 
-  console.log()
-
-  if(user?.emailAddresses[0].emailAddress == 'adminadsmakassar@gmail.com') {
-    redirect('/admin')
-  }
-
-  // Cek apakah user sudah pernah submit survey (nama responden mengandung fullName user)
-  // @ts-ignore
+  // Cek apakah user sudah pernah submit survey
+  // (nama responden mengandung username user yang login)
   const sudahIsi = surveys.some((survey) =>
-    survey.responden?.toLowerCase().includes(user?.fullName?.toLowerCase() ?? '')
+    survey.responden?.toLowerCase().includes(session.username.toLowerCase())
   )
 
   const completedCount = surveys.length
@@ -33,11 +32,11 @@ export default async function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <Navbar />
+      <Navbar showAuth={false} />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-12">
         <PageHeader
-          title={`Hi, ${user?.fullName || ""}`}
+          title={`Halo, ${session.username}`}
           description="Dashboard untuk mengelola survey kepuasan pelanggan"
         />
 
@@ -57,7 +56,11 @@ export default async function UserDashboard() {
           <DashboardCard
             title="Hasil terakhir"
             value={lastSurvey ? lastSurvey.prediksi ?? '-' : '-'}
-            subtitle={lastSurvey ? `${lastSurvey.probabilitas}% probabilitas` : 'Belum ada data'}
+            subtitle={
+              lastSurvey
+                ? `${lastSurvey.probabilitas}% probabilitas`
+                : 'Belum ada data'
+            }
             icon={<TrendingUp className="w-full h-full" />}
           />
         </div>
@@ -70,7 +73,7 @@ export default async function UserDashboard() {
               disabled={sudahIsi}
               className="rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {sudahIsi ? 'Survey sudah diisi bulan ini' : 'Isi survey baru'}
+              {sudahIsi ? 'Survey sudah diisi' : 'Isi survey baru'}
             </Button>
           </Link>
           {sudahIsi && (
@@ -85,7 +88,6 @@ export default async function UserDashboard() {
           <h2 className="text-base font-semibold text-slate-900 mb-6">
             Riwayat survey terbaru
           </h2>
-
           <SurveyTable data={surveys.slice(0, 10)} />
         </div>
       </main>

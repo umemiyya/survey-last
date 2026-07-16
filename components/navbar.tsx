@@ -1,10 +1,22 @@
 'use client'
 
 import Link from 'next/link'
-import { useUser, UserButton } from '@clerk/nextjs'
+import { logout } from '@/actions/auth'
+import { useEffect, useState } from 'react'
 
-export function Navbar() {
-  const { user, isLoaded } = useUser()
+interface NavbarProps {
+  showAuth?: boolean
+}
+
+export function Navbar({ showAuth = true }: NavbarProps) {
+  const [username, setUsername] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/me')
+      .then((r) => r.json())
+      .then((d) => { if (d.username) setUsername(d.username) })
+      .catch(() => {})
+  }, [])
 
   return (
     <header className="border-b border-slate-100 bg-white">
@@ -16,25 +28,32 @@ export function Navbar() {
           <span className="font-semibold text-slate-900 text-sm">Survey Kepuasan</span>
         </Link>
 
-        <div className="flex items-center gap-3">
-          {!isLoaded ? (
-            <div className="w-8 h-8 rounded-full bg-slate-200 animate-pulse" />
-          ) : user ? (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-slate-600 hidden sm:block">
-                {user.fullName ?? user.emailAddresses[0].emailAddress}
-              </span>
-              <UserButton afterSignOutUrl="/" />
-            </div>
-          ) : (
-            <Link
-              href="/sign-in"
-              className="text-sm font-medium px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-            >
-              Masuk
-            </Link>
-          )}
-        </div>
+        {showAuth && (
+          <div className="flex items-center gap-3">
+            {username ? (
+              <>
+                <span className="text-sm text-slate-500">{username}</span>
+                <form action={logout}>
+                  <button
+                    type="submit"
+                    className="text-sm font-medium px-4 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                  >
+                    Keluar
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
+                  Masuk
+                </Link>
+                <Link href="/register" className="text-sm font-medium px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                  Daftar
+                </Link>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </header>
   )

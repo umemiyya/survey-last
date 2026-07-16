@@ -6,49 +6,48 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  role      String   @default("user") // "admin" | "user"
+  createdAt DateTime @default(now())
+
+  @@map("users")
+}
+
 model Survey {
   id                     String   @id @default(uuid())
 
-  // ── Bagian A: Identitas ───────────────────────────────────────────
+  // Bagian A
   responden              String
   bulan                  String
   namaPerusahaan         String?
   jabatan                String?
   periodeLayanan         String?
 
-  // ── Bagian B: Penilaian — sub-pernyataan individual (1-3) ─────────
-  // B1: Kualitas Aroma
+  // Bagian B — sub-pernyataan individual
   b1_kualitasAroma_1     Int?
   b1_kualitasAroma_2     Int?
   b1_kualitasAroma_3     Int?
-
-  // B2: Ketahanan & Kebersihan Alat
   b2_kebersihanAlat_1    Int?
   b2_kebersihanAlat_2    Int?
   b2_kebersihanAlat_3    Int?
-
-  // B3: Ketepatan Waktu Perawatan
   b3_ketepatanWaktu_1    Int?
   b3_ketepatanWaktu_2    Int?
   b3_ketepatanWaktu_3    Int?
-
-  // B4: Responsivitas Layanan
   b4_kecepatanRespon_1   Int?
   b4_kecepatanRespon_2   Int?
   b4_kecepatanRespon_3   Int?
-
-  // B5: Kualitas Pengharum & Pelayanan Service
   b5_pelayananService_1  Int?
   b5_pelayananService_2  Int?
   b5_pelayananService_3  Int?
-
-  // B6: Kepuasan Keseluruhan & Penanganan Keluhan
   b6_pelayananComplain_1 Int?
   b6_pelayananComplain_2 Int?
   b6_pelayananComplain_3 Int?
 
-  // ── Field agregat (rata-rata B per kategori) — untuk classifier ───
-  kualitasPengharum      Int      // proxy dari pelayananService
+  // Rata-rata per kategori
+  kualitasPengharum      Int
   pelayananService       Int
   pelayananComplain      Int
   kualitasAroma          Int
@@ -56,17 +55,17 @@ model Survey {
   ketepatanWaktu         Int
   kecepatanRespon        Int
 
-  // ── Bagian C: Kesediaan ───────────────────────────────────────────
+  // Bagian C
   akanMenggunakan        String
   pelayananDiperpanjang  String
   bersediaRekomendasikan String?
   tertarikLayananLain    String?
   tetapMemilih           String?
 
-  // ── Bagian D: Saran ───────────────────────────────────────────────
+  // Bagian D
   saran                  String?
 
-  // ── Hasil klasifikasi ─────────────────────────────────────────────
+  // Hasil klasifikasi
   prediksi               String?
   probabilitas           Int?
   labelManual            String?
