@@ -3,6 +3,13 @@ import { verifyToken, COOKIE_CONFIG } from '@/lib/auth'
 
 const PUBLIC_ROUTES = ['/', '/login', '/register']
 
+// Route /user/* yang boleh diakses semua role (admin & user)
+// karena berisi laporan/hasil yang perlu dilihat admin juga
+const USER_ROUTES_ALL_ROLES = [
+  '/user/result',
+  '/user/result/print',
+]
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -20,17 +27,26 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // /admin/* → hanya role admin
+  // Cek apakah ini route /user/* yang boleh diakses semua role
+  const isSharedUserRoute = USER_ROUTES_ALL_ROLES.some((route) =>
+    pathname.startsWith(route)
+  )
+
+  // /admin/* → hanya admin
   if (pathname.startsWith('/admin') && session.role !== 'admin') {
     const url = request.nextUrl.clone()
-    url.pathname = '/user'
+    url.pathname = '/user/dashboard'
     return NextResponse.redirect(url)
   }
 
-  // /user/* → hanya role user (admin tidak bisa akses /user)
-  if (pathname.startsWith('/user') && session.role !== 'user') {
+  // /user/* → hanya user, KECUALI route yang dibagi untuk semua role
+  if (
+    pathname.startsWith('/user') &&
+    !isSharedUserRoute &&
+    session.role !== 'user'
+  ) {
     const url = request.nextUrl.clone()
-    url.pathname = '/admin'
+    url.pathname = '/admin/dashboard'
     return NextResponse.redirect(url)
   }
 

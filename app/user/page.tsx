@@ -32,7 +32,7 @@ export default async function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <Navbar showAuth={false} />
+      <Navbar showAuth={true} />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-12">
         <PageHeader
