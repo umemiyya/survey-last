@@ -3,6 +3,8 @@ import { PageHeader } from '@/components/page-header'
 import { LabelingManager } from '@/components/labeling-manager'
 import { getSurveysForLabeling } from '@/actions/survey'
 
+export const dynamic = 'force-dynamic' // ← tambahkan ini
+
 export default async function LabelingPage() {
   const { unlabeled, labeledCount } = await getSurveysForLabeling()
 

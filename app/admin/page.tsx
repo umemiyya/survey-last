@@ -8,6 +8,8 @@ import { AdminSurveyTable } from '@/components/admin-survey-table'
 import { Bell } from 'lucide-react'
 import { getSurveyStats } from '@/actions/survey'
 
+export const dynamic = 'force-dynamic' // ← tambahkan ini
+
 export default async function AdminDashboard() {
   const stats = await getSurveyStats()
 

@@ -3,6 +3,8 @@ import { getSatisfactionBadgeClass } from "@/lib/satisfaction"
 import Link from "next/link"
 import { PrintButton } from "@/components/print-button"
 
+export const dynamic = 'force-dynamic' // ← tambahkan ini
+
 export default async function ResultPage({
   searchParams,
 }: {

@@ -54,6 +54,8 @@ const ALGORITHM_STEPS = [
   },
 ]
 
+export const dynamic = 'force-dynamic' // ← tambahkan ini
+
 export default async function ClassificationPage() {
   const stats = await getModelStats()
   const sortedWeights = Object.entries(stats.featureWeights).sort((a, b) => b[1] - a[1])
