@@ -3,6 +3,8 @@ import { PageHeader } from '@/components/page-header'
 import { SurveysManager } from '@/components/surveys-manager'
 import { getAllSurveys } from '@/actions/survey'
 
+export const dynamic = 'force-dynamic' // ← tambahkan ini
+
 export default async function AdminSurveysPage() {
   const surveys = await getAllSurveys()
 

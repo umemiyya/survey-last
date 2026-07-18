@@ -10,22 +10,26 @@ import { getAllSurveys } from '@/actions/survey'
 import { getSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
 
+// Paksa selalu fetch fresh — tidak pakai cache di production
+export const dynamic = 'force-dynamic'
+
 export default async function UserDashboard() {
   const session = await getSession()
 
-  // Belum login → halaman login
   if (!session) redirect('/login')
-
-  // Admin nyasar ke /user → arahkan ke dashboard admin
   if (session.role === 'admin') redirect('/admin/dashboard')
 
   const surveys = await getAllSurveys()
 
-  // Cek apakah user sudah pernah submit survey
-  // (nama responden mengandung username user yang login)
-  const sudahIsi = surveys.some((survey) =>
-    survey.responden?.toLowerCase().includes(session.username.toLowerCase())
-  )
+  // Hanya cek survey yang respondennya mengandung username user ini
+  // Format responden: "Nama Lengkap (username)" — cek bagian dalam kurung
+  // untuk memastikan exact match username, bukan substring kebetulan cocok
+  const sudahIsi = surveys.some((survey) => {
+    const responden = survey.responden?.toLowerCase() ?? ''
+    const username = session.username.toLowerCase()
+    // Cek format "(username)" di akhir string
+    return responden.includes(`(${username})`)
+  })
 
   const completedCount = surveys.length
   const lastSurvey = surveys[0]
