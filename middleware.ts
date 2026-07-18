@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
   // /admin/* → hanya admin
   if (pathname.startsWith('/admin') && session.role !== 'admin') {
     const url = request.nextUrl.clone()
-    url.pathname = '/user/dashboard'
+    url.pathname = '/user'
     return NextResponse.redirect(url)
   }
 
@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
     session.role !== 'user'
   ) {
     const url = request.nextUrl.clone()
-    url.pathname = '/admin/dashboard'
+    url.pathname = '/admin'
     return NextResponse.redirect(url)
   }
 

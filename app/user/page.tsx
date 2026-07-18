@@ -17,7 +17,7 @@ export default async function UserDashboard() {
   const session = await getSession()
 
   if (!session) redirect('/login')
-  if (session.role === 'admin') redirect('/admin/dashboard')
+  if (session.role === 'admin') redirect('/admin')
 
   const surveys = await getAllSurveys()
 
