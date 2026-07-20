@@ -44,7 +44,6 @@ export async function login(formData: FormData) {
   if (!username || !password)
     return { error: 'Username dan password harus diisi' }
 
-  //@ts-ignore
   const user = await prisma.user.findUnique({ where: { username } })
   if (!user) return { error: 'Username atau password salah' }
 

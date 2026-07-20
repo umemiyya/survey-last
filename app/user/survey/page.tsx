@@ -161,7 +161,8 @@ export default function SurveyPage() {
       alert(result.error || 'Terjadi kesalahan saat mengirim survey.')
       return
     }
-    router.push(`/user/result?id=${result.id}`)
+    router.push(`/report`)
+    // router.push(`/user/result?id=${result.id}`)
   }
 
   return (
