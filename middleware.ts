@@ -8,6 +8,7 @@ const PUBLIC_ROUTES = ['/', '/login', '/register']
 const USER_ROUTES_ALL_ROLES = [
   '/user/result',
   '/user/result/print',
+  '/report',
 ]
 
 export async function middleware(request: NextRequest) {
