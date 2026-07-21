@@ -197,13 +197,13 @@ export default async function ReportPage({
             Kembali
           </Link>
           <a
-            href={`/user/result/print/${id}`}
+            href={`/user`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
           >
-            <FileDown className="w-4 h-4" />
-            Unduh PDF
+            {/* <FileDown className="w-4 h-4" /> */}
+            Dashboard User
           </a>
         </div>
 
@@ -507,13 +507,13 @@ export default async function ReportPage({
             Kembali
           </Link>
           <a
-            href={`/user/result/print/${id}`}
+            href={`/user`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
           >
-            <FileDown className="w-4 h-4" />
-            Unduh PDF
+            {/* <FileDown className="w-4 h-4" /> */}
+            Dashboard User
           </a>
         </div>
 
