@@ -22,17 +22,26 @@ interface Survey {
 
 const LABEL_SHORT: Record<string, string> = {
   'Tidak Puas': 'TP',
-  'Puas': 'P',
-  'Sangat Puas': 'SP',
+  'Cukup Puas': 'CP',
+  'Puas':       'P',
 }
 
-const LABEL_BUTTON_CLASS: Record<string, { idle: string }> = {
-  'Tidak Puas': { idle: 'border-slate-200 text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200' },
-  'Puas': { idle: 'border-slate-200 text-slate-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200' },
-  'Sangat Puas': { idle: 'border-slate-200 text-slate-500 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200' },
+const LABEL_BUTTON_CLASS: Record<string, string> = {
+  'Tidak Puas': 'border-slate-200 text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200',
+  'Cukup Puas': 'border-slate-200 text-slate-500 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200',
+  'Puas':       'border-slate-200 text-slate-500 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200',
 }
 
-export function LabelingManager({ initialSurveys, initialLabeledCount }: { initialSurveys: Survey[]; initialLabeledCount: number }) {
+const LABEL_ACTIVE_CLASS: Record<string, string> = {
+  'Tidak Puas': 'bg-red-600 text-white border-red-600',
+  'Cukup Puas': 'bg-amber-500 text-white border-amber-500',
+  'Puas':       'bg-blue-700 text-white border-blue-700',
+}
+
+export function LabelingManager({ initialSurveys, initialLabeledCount }: {
+  initialSurveys: Survey[]
+  initialLabeledCount: number
+}) {
   const [surveys, setSurveys] = useState(initialSurveys)
   const [labeledCount, setLabeledCount] = useState(initialLabeledCount)
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -75,11 +84,23 @@ export function LabelingManager({ initialSurveys, initialLabeledCount }: { initi
           <p className="text-sm font-medium text-slate-900">{labeledCount} data sudah dilabel</p>
           <p className="text-sm text-slate-500">{surveys.length} data tersisa belum dilabel</p>
         </div>
-        <button onClick={handleExport} disabled={isExporting || labeledCount === 0}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+        {/* <button
+          onClick={handleExport}
+          disabled={isExporting || labeledCount === 0}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
           <Download className="w-4 h-4" />
           {isExporting ? 'Mengekspor...' : 'Ekspor CSV untuk training'}
-        </button>
+        </button> */}
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-3 text-xs text-slate-400 px-1">
+        {SATISFACTION_LEVELS.map((level) => (
+          <span key={level}>
+            <span className="font-medium text-slate-500">{LABEL_SHORT[level]}</span> = {level}
+          </span>
+        ))}
       </div>
 
       {surveys.length === 0 ? (
@@ -88,7 +109,7 @@ export function LabelingManager({ initialSurveys, initialLabeledCount }: { initi
             <Check className="w-5 h-5 text-blue-600" />
           </div>
           <p className="text-sm font-medium text-slate-900 mb-1">Semua data sudah dilabel</p>
-          <p className="text-sm text-slate-400">Anda bisa mengekspor data ini untuk melatih model Random Forest.</p>
+          <p className="text-sm text-slate-400">Ekspor data untuk melatih model Random Forest.</p>
         </div>
       ) : (
         <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden">
@@ -116,7 +137,7 @@ export function LabelingManager({ initialSurveys, initialLabeledCount }: { initi
                         <div className="flex items-center gap-1.5">
                           <div className="flex gap-0.5">
                             {ratings.map((r, i) => (
-                              <span key={i} className={`w-1.5 h-4 rounded-sm ${r >= 4 ? 'bg-blue-600' : r === 3 ? 'bg-blue-300' : 'bg-red-300'}`} />
+                              <span key={i} className={`w-1.5 h-4 rounded-sm ${r === 3 ? 'bg-blue-600' : r === 2 ? 'bg-amber-400' : 'bg-red-400'}`} />
                             ))}
                           </div>
                           <span className="text-xs text-slate-400 ml-1">avg {avg.toFixed(1)}</span>
@@ -133,8 +154,13 @@ export function LabelingManager({ initialSurveys, initialLabeledCount }: { initi
                       <td className="px-4 py-3.5 align-top">
                         <div className="flex gap-1.5">
                           {SATISFACTION_LEVELS.map((level) => (
-                            <button key={level} disabled={isRowPending} onClick={() => handleLabel(s.id, level)} title={level}
-                              className={`w-9 h-8 rounded-lg border text-xs font-medium transition-colors disabled:cursor-not-allowed ${LABEL_BUTTON_CLASS[level].idle}`}>
+                            <button
+                              key={level}
+                              disabled={isRowPending}
+                              onClick={() => handleLabel(s.id, level)}
+                              title={level}
+                              className={`w-9 h-8 rounded-lg border text-xs font-medium transition-colors disabled:cursor-not-allowed ${LABEL_BUTTON_CLASS[level]}`}
+                            >
                               {LABEL_SHORT[level]}
                             </button>
                           ))}

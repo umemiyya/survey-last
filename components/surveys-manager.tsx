@@ -3,7 +3,7 @@
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { DataTable } from '@/components/data-table'
-import { Search, Trash2, Eye, FileDown } from 'lucide-react'
+import { Search, Trash2, Eye, FileDown, BarChart2 } from 'lucide-react'
 import { deleteSurvey } from '@/actions/survey'
 import { getSatisfactionBadgeClass } from '@/lib/satisfaction'
 
@@ -53,7 +53,6 @@ export function SurveysManager({ initialSurveys }: SurveysManagerProps) {
 
   return (
     <>
-      {/* Search and Filter */}
       <div className="space-y-3">
         <div className="flex flex-col md:flex-row gap-3">
           <div className="flex-1 relative">
@@ -72,8 +71,8 @@ export function SurveysManager({ initialSurveys }: SurveysManagerProps) {
             className="px-4 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
           >
             <option value="all">Semua status</option>
-            <option value="Sangat Puas">Sangat Puas</option>
             <option value="Puas">Puas</option>
+            <option value="Cukup Puas">Cukup Puas</option>
             <option value="Tidak Puas">Tidak Puas</option>
           </select>
         </div>
@@ -82,7 +81,6 @@ export function SurveysManager({ initialSurveys }: SurveysManagerProps) {
         </p>
       </div>
 
-      {/* Table */}
       <div className="bg-white border border-slate-100 rounded-2xl p-6">
         <DataTable
           columns={[
@@ -112,27 +110,29 @@ export function SurveysManager({ initialSurveys }: SurveysManagerProps) {
               label: 'Aksi',
               render: (value: string) => (
                 <div className="flex items-center gap-1">
-                  {/* Lihat detail */}
                   <button
                     onClick={() => router.push(`/user/result?id=${value}`)}
                     className="p-1.5 hover:bg-slate-50 rounded-lg transition-colors text-slate-400 hover:text-blue-600"
-                    title="Lihat detail"
+                    title="Lihat hasil"
                   >
                     <Eye className="w-4 h-4" />
                   </button>
-
-                  {/* Unduh laporan PDF */}
+                  <button
+                    onClick={() => router.push(`/report?id=${value}`)}
+                    className="p-1.5 hover:bg-slate-50 rounded-lg transition-colors text-slate-400 hover:text-blue-600"
+                    title="Laporan detail"
+                  >
+                    <BarChart2 className="w-4 h-4" />
+                  </button>
                   <a
                     href={`/user/result/print/${value}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-1.5 hover:bg-slate-50 rounded-lg transition-colors text-slate-400 hover:text-blue-600"
-                    title="Unduh laporan PDF"
+                    title="Unduh PDF"
                   >
                     <FileDown className="w-4 h-4" />
                   </a>
-
-                  {/* Hapus */}
                   <button
                     onClick={() => handleDelete(value)}
                     disabled={isPending && deletingId === value}

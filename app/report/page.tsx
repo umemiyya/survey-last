@@ -8,8 +8,6 @@ import { FileDown, ArrowLeft } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-// ── Konstanta label ───────────────────────────────────────────────────────────
-
 const FEATURE_LABELS: Record<string, string> = {
   pelayananService:  'Pelayanan Service',
   kecepatanRespon:   'Kecepatan Respon',
@@ -21,10 +19,16 @@ const FEATURE_LABELS: Record<string, string> = {
 }
 
 const LIKERT_LABEL: Record<number, { label: string; color: string }> = {
-  1: { label: 'Tidak Puas',  color: 'text-red-600 bg-red-50 border-red-200'    },
-  2: { label: 'Cukup Puas',  color: 'text-amber-600 bg-amber-50 border-amber-200' },
-  3: { label: 'Puas',        color: 'text-blue-700 bg-blue-50 border-blue-200' },
+  1: { label: 'Tidak Puas', color: 'text-red-600 bg-red-50 border-red-200'       },
+  2: { label: 'Cukup Puas', color: 'text-amber-600 bg-amber-50 border-amber-200' },
+  3: { label: 'Puas',       color: 'text-blue-700 bg-blue-50 border-blue-200'    },
 }
+
+const THRESHOLDS = [
+  { range: '< 40',  label: 'Tidak Puas', prediksi: 'Tidak Puas' },
+  { range: '40–69', label: 'Cukup Puas', prediksi: 'Cukup Puas' },
+  { range: '≥ 70',  label: 'Puas',       prediksi: 'Puas'       },
+]
 
 const BAGIAN_B_DETAIL = [
   {
@@ -83,59 +87,53 @@ const BAGIAN_B_DETAIL = [
   },
 ]
 
-// ── Helper: buat narasi penjelasan otomatis ──────────────────────────────────
-
 function buildNarasi(
   kontribusi: { fitur: string; bobot: number; nilai: number; kontribusi: number }[],
   skor: number,
   prediksi: string
 ): string {
-  const sorted   = [...kontribusi].sort((a, b) => b.kontribusi - a.kontribusi)
+  const sorted    = [...kontribusi].sort((a, b) => b.kontribusi - a.kontribusi)
   const tertinggi = sorted[0]
   const terendah  = sorted[sorted.length - 1]
-
-  const nilaiLabel = (n: number) =>
-    n === 3 ? 'sangat baik (Puas)' : n === 2 ? 'cukup (Cukup Puas)' : 'kurang (Tidak Puas)'
-
   const fiturLemah = kontribusi.filter((k) => k.nilai === 1)
   const fiturKuat  = kontribusi.filter((k) => k.nilai === 3)
 
+  const nilaiLabel = (n: number) =>
+    n === 3 ? 'baik (Puas)' : n === 2 ? 'cukup (Cukup Puas)' : 'kurang (Tidak Puas)'
+
   let narasi = `Berdasarkan analisis terhadap 7 dimensi layanan, total skor tertimbang yang diperoleh adalah ${skor} dari 100. `
 
-  if (prediksi === 'Sangat Puas') {
-    narasi += `Skor ini menempatkan responden pada kategori Sangat Puas (≥ 70). `
-  } else if (prediksi === 'Puas') {
-    narasi += `Skor ini menempatkan responden pada kategori Puas (40–69). `
+  if (prediksi === 'Puas') {
+    narasi += `Skor ini menempatkan responden pada kategori Puas (≥ 70). `
+  } else if (prediksi === 'Cukup Puas') {
+    narasi += `Skor ini menempatkan responden pada kategori Cukup Puas (40–69). `
   } else {
     narasi += `Skor ini menempatkan responden pada kategori Tidak Puas (< 40). `
   }
 
-  narasi += `\n\nDimensi yang paling berkontribusi adalah ${tertinggi.fitur} dengan bobot ${tertinggi.bobot}% dan nilai ${nilaiLabel(tertinggi.nilai)}, menyumbang ${tertinggi.kontribusi.toFixed(1)} poin ke skor akhir. `
+  narasi += `\n\nDimensi yang paling berkontribusi adalah ${tertinggi.fitur} dengan bobot ${tertinggi.bobot}% dan penilaian ${nilaiLabel(tertinggi.nilai)}, menyumbang ${tertinggi.kontribusi.toFixed(1)} poin ke skor akhir. `
 
-  if (fiturKuat.length > 0 && fiturKuat.length < kontribusi.length) {
-    narasi += `Dimensi yang dinilai ${nilaiLabel(3)} oleh responden meliputi: ${fiturKuat.map((k) => k.fitur).join(', ')}. `
-  } else if (fiturKuat.length === kontribusi.length) {
+  if (fiturKuat.length === kontribusi.length) {
     narasi += `Seluruh dimensi layanan mendapat penilaian tertinggi (Puas), menunjukkan kepuasan yang menyeluruh. `
+  } else if (fiturKuat.length > 0) {
+    narasi += `Dimensi yang dinilai baik: ${fiturKuat.map((k) => k.fitur).join(', ')}. `
   }
 
   if (fiturLemah.length > 0) {
-    narasi += `\n\nPerlu mendapat perhatian: dimensi ${fiturLemah.map((k) => k.fitur).join(', ')} mendapat penilaian terendah (Tidak Puas). `
+    narasi += `\n\nPerlu mendapat perhatian: dimensi ${fiturLemah.map((k) => k.fitur).join(', ')} mendapat penilaian Tidak Puas. `
     if (fiturLemah.some((k) => k.bobot >= 20)) {
       narasi += `Karena dimensi ini memiliki bobot signifikan (≥ 20%), perbaikan di area ini dapat berdampak besar pada kepuasan keseluruhan. `
     }
   }
 
-  if (prediksi === 'Puas') {
-    const gapKeSangatPuas = 70 - skor
-    narasi += `\n\nUntuk mencapai kategori Sangat Puas, dibutuhkan peningkatan skor sebesar ${gapKeSangatPuas} poin. Fokus pada dimensi berbobot tinggi seperti ${sorted[0].fitur} dan ${sorted[1].fitur} akan memberikan dampak paling efisien. `
+  if (prediksi === 'Cukup Puas') {
+    narasi += `\n\nUntuk mencapai kategori Puas, dibutuhkan peningkatan skor sebesar ${70 - skor} poin. Fokus pada ${sorted[0].fitur} dan ${sorted[1].fitur} akan memberikan dampak paling efisien karena bobot terbesar. `
   } else if (prediksi === 'Tidak Puas') {
     narasi += `\n\nKondisi ini memerlukan perhatian segera. Prioritas perbaikan sebaiknya dimulai dari ${terendah.fitur} yang mendapat nilai terendah, diikuti dimensi berbobot besar lainnya. `
   }
 
   return narasi
 }
-
-// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function ReportPage({
   searchParams,
@@ -151,8 +149,6 @@ export default async function ReportPage({
   const survey = await getSurveyById(id)
   if (!survey) notFound()
 
-  // Pastikan user hanya bisa akses survey miliknya sendiri
-  // (admin bisa akses semua)
   if (session.role !== 'admin') {
     const isOwner = survey.responden
       ?.toLowerCase()
@@ -160,7 +156,6 @@ export default async function ReportPage({
     if (!isOwner) redirect('/user/dashboard')
   }
 
-  // Hitung ulang klasifikasi dari data mentah untuk mendapat detail kontribusi
   const ratings = {
     kualitasPengharum:  survey.kualitasPengharum,
     pelayananService:   survey.pelayananService,
@@ -175,9 +170,9 @@ export default async function ReportPage({
   const sortedKontribusi = [...kontribusi].sort((a, b) => b.kontribusi - a.kontribusi)
   const narasi = buildNarasi(kontribusi, skor, prediksi)
 
-  const circumference = 2 * Math.PI * 54
-  const offset = circumference - (probabilitas / 100) * circumference
-  const prediksiColor = SATISFACTION_HEX[prediksi as keyof typeof SATISFACTION_HEX] ?? '#185FA5'
+  const circumference  = 2 * Math.PI * 54
+  const offset         = circumference - (probabilitas / 100) * circumference
+  const prediksiColor  = SATISFACTION_HEX[prediksi as keyof typeof SATISFACTION_HEX] ?? '#185FA5'
 
   const tanggal = new Intl.DateTimeFormat('id-ID', {
     day: 'numeric', month: 'long', year: 'numeric',
@@ -197,13 +192,13 @@ export default async function ReportPage({
             Kembali
           </Link>
           <a
-            href={`/user`}
+            href={`/user/result/print/${id}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
           >
-            {/* <FileDown className="w-4 h-4" /> */}
-            Dashboard User
+            <FileDown className="w-4 h-4" />
+            Unduh PDF
           </a>
         </div>
 
@@ -215,12 +210,12 @@ export default async function ReportPage({
           <h1 className="text-xl font-semibold text-slate-900 mb-4">
             {survey.responden?.split('(')[0].trim()}
           </h1>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              ['Perusahaan',  survey.namaPerusahaan || '-'],
-              ['Jabatan',     survey.jabatan || '-'],
-              ['Bulan',       survey.bulan],
-              ['Tanggal',     tanggal],
+              ['Perusahaan', survey.namaPerusahaan || '-'],
+              ['Jabatan',    survey.jabatan || '-'],
+              ['Bulan',      survey.bulan],
+              ['Tanggal',    tanggal],
             ].map(([label, value]) => (
               <div key={label}>
                 <p className="text-[11px] text-slate-400 mb-0.5">{label}</p>
@@ -232,12 +227,10 @@ export default async function ReportPage({
 
         {/* ── Hasil klasifikasi ─────────────────────────────────────── */}
         <div className="bg-white border border-slate-100 rounded-2xl p-6">
-          <h2 className="text-base font-semibold text-slate-900 mb-6">
-            Hasil klasifikasi
-          </h2>
+          <h2 className="text-base font-semibold text-slate-900 mb-6">Hasil klasifikasi</h2>
           <div className="flex flex-col sm:flex-row items-center gap-8">
 
-            {/* Donut skor */}
+            {/* Donut */}
             <div className="flex flex-col items-center flex-shrink-0">
               <div className="relative w-36 h-36">
                 <svg className="w-36 h-36 -rotate-90" viewBox="0 0 120 120">
@@ -263,52 +256,54 @@ export default async function ReportPage({
               </span>
             </div>
 
-            {/* Skor & threshold */}
+            {/* Skor + threshold */}
             <div className="flex-1 space-y-4 w-full">
               <div className="bg-slate-50 rounded-xl p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-slate-500">Skor tertimbang</span>
                   <span className="text-2xl font-semibold text-slate-900">{skor} / 100</span>
                 </div>
-                <div className="w-full bg-slate-200 rounded-full h-2">
+                <div className="relative w-full bg-slate-200 rounded-full h-3">
+                  {/* Marker threshold 40 */}
+                  <div className="absolute top-0 bottom-0 w-px bg-amber-400 opacity-70" style={{ left: '40%' }} />
+                  {/* Marker threshold 70 */}
+                  <div className="absolute top-0 bottom-0 w-px bg-blue-500 opacity-70" style={{ left: '70%' }} />
                   <div
-                    className="h-2 rounded-full transition-all"
+                    className="h-3 rounded-full transition-all"
                     style={{ width: `${skor}%`, backgroundColor: prediksiColor }}
                   />
                 </div>
-                <div className="flex justify-between text-[11px] text-slate-400 mt-1.5">
+                <div className="flex justify-between text-[10px] text-slate-400 mt-1.5 px-0.5">
                   <span>0</span>
-                  <span className="text-red-400">↑ 40 (Tidak Puas)</span>
-                  <span className="text-amber-400">↑ 70 (Sangat Puas)</span>
+                  <span className="text-amber-500">40</span>
+                  <span className="text-blue-500">70</span>
                   <span>100</span>
                 </div>
               </div>
 
+              {/* 3 kotak threshold */}
               <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                {[
-                  { range: '< 40', label: 'Tidak Puas',  active: prediksi === 'Tidak Puas' },
-                  { range: '40–69', label: 'Puas',        active: prediksi === 'Puas'        },
-                  { range: '≥ 70', label: 'Sangat Puas', active: prediksi === 'Sangat Puas' },
-                ].map((t) => (
-                  <div
-                    key={t.label}
-                    className={`p-2.5 rounded-xl border ${
-                      t.active
-                        ? 'border-blue-200 bg-blue-50'
-                        : 'border-slate-100 bg-white'
-                    }`}
-                  >
-                    <p className={`font-mono text-[11px] mb-0.5 ${t.active ? 'text-blue-600' : 'text-slate-400'}`}>
-                      {t.range}
-                    </p>
-                    <p className={`font-medium ${t.active ? 'text-blue-700' : 'text-slate-400'}`}>
-                      {t.label}
-                    </p>
-                    {t.active && (
-                      <p className="text-[10px] text-blue-500 mt-0.5">← hasil Anda</p>
-                    )}
-                  </div>
-                ))}
+                {THRESHOLDS.map((t) => {
+                  const active = prediksi === t.prediksi
+                  const color  = SATISFACTION_HEX[t.label as keyof typeof SATISFACTION_HEX]
+                  return (
+                    <div
+                      key={t.label}
+                      className={`p-2.5 rounded-xl border ${active ? 'border-current' : 'border-slate-100 bg-white'}`}
+                      style={active ? { backgroundColor: `${color}12`, borderColor: `${color}40` } : {}}
+                    >
+                      <p className="font-mono text-[11px] mb-0.5" style={{ color: active ? color : '#94a3b8' }}>
+                        {t.range}
+                      </p>
+                      <p className="font-medium" style={{ color: active ? color : '#94a3b8' }}>
+                        {t.label}
+                      </p>
+                      {active && (
+                        <p className="text-[10px] mt-0.5" style={{ color }}>← hasil Anda</p>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -326,8 +321,8 @@ export default async function ReportPage({
           <div className="space-y-4">
             {sortedKontribusi.map((k, idx) => {
               const pctOfMax = (k.kontribusi / k.bobot) * 100
-              const isLemah = k.nilai === 1
-              const isKuat  = k.nilai === 3
+              const isLemah  = k.nilai === 1
+              const isTerkuat = idx === 0
               return (
                 <div key={k.fitur} className="space-y-1.5">
                   <div className="flex items-center justify-between">
@@ -339,14 +334,14 @@ export default async function ReportPage({
                           Perlu perhatian
                         </span>
                       )}
-                      {isKuat && idx === 0 && (
+                      {isTerkuat && !isLemah && (
                         <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">
                           Terkuat
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-3 text-sm">
-                      <span className="text-slate-400">
+                      <span className="text-slate-400 text-xs">
                         {((k.nilai - 1) / 2).toFixed(2)} × {k.bobot}
                       </span>
                       <span className="font-semibold text-slate-900 w-10 text-right">
@@ -360,28 +355,27 @@ export default async function ReportPage({
                         className="h-2 rounded-full"
                         style={{
                           width: `${pctOfMax}%`,
-                          backgroundColor: isLemah ? '#E24B4A' : '#185FA5',
+                          backgroundColor: isLemah ? '#E24B4A' : k.nilai === 2 ? '#EF9F27' : '#185FA5',
                         }}
                       />
                     </div>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${LIKERT_LABEL[k.nilai]?.color}`}>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border flex-shrink-0 ${LIKERT_LABEL[k.nilai]?.color}`}>
                       {LIKERT_LABEL[k.nilai]?.label}
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-400 pl-5">
-                    Bobot: {k.bobot}% dari total skor &nbsp;·&nbsp;
+                    Bobot: {k.bobot}% &nbsp;·&nbsp;
                     Nilai ternormalisasi: {((k.nilai - 1) / 2).toFixed(2)} &nbsp;·&nbsp;
-                    Potensi maksimal: {k.bobot.toFixed(1)} poin
+                    Potensi maksimal: {k.bobot.toFixed(0)} poin
                   </p>
                 </div>
               )
             })}
           </div>
 
-          {/* Total */}
           <div className="mt-5 pt-4 border-t border-slate-100 flex justify-between items-center">
             <span className="text-sm font-medium text-slate-600">Total skor</span>
-            <span className="text-xl font-bold text-slate-900">{skor.toFixed(1)} / 100</span>
+            <span className="text-xl font-bold text-slate-900">{skor} / 100</span>
           </div>
         </div>
 
@@ -391,7 +385,7 @@ export default async function ReportPage({
             Jawaban lengkap per pernyataan
           </h2>
           <p className="text-sm text-slate-400 mb-6">
-            Bagian B — skala 1 (Tidak Puas) · 2 (Cukup Puas) · 3 (Puas)
+            Bagian B — 1 = Tidak Puas · 2 = Cukup Puas · 3 = Puas
           </p>
           <div className="space-y-6">
             {BAGIAN_B_DETAIL.map((kat) => {
@@ -402,13 +396,13 @@ export default async function ReportPage({
                     <p className="text-sm font-semibold text-slate-900">
                       {kat.nomor}. {kat.judul}
                     </p>
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full border ${LIKERT_LABEL[featureAvg]?.color ?? 'text-slate-500 bg-slate-50 border-slate-200'}`}>
+                    <span className={`text-xs font-medium px-2 py-1 rounded-full border ${LIKERT_LABEL[featureAvg]?.color ?? 'text-slate-400 bg-slate-50 border-slate-200'}`}>
                       Rata-rata: {featureAvg}/3
                     </span>
                   </div>
                   <div className="space-y-2">
                     {kat.items.map((item, idx) => {
-                      const val = (survey as any)[item.key] as number | null
+                      const val  = (survey as any)[item.key] as number | null
                       const info = val ? LIKERT_LABEL[val] : null
                       return (
                         <div key={item.key} className="flex items-start gap-3 bg-slate-50 rounded-xl p-3">
@@ -433,18 +427,18 @@ export default async function ReportPage({
           </div>
         </div>
 
-        {/* ── Kesediaan (Bagian C) ──────────────────────────────────── */}
+        {/* ── Bagian C ─────────────────────────────────────────────── */}
         <div className="bg-white border border-slate-100 rounded-2xl p-6">
           <h2 className="text-base font-semibold text-slate-900 mb-5">
             Bagian C — Kesediaan menggunakan layanan
           </h2>
           <div className="space-y-2">
             {[
-              { teks: 'Bersedia menggunakan kembali layanan.',             val: survey.akanMenggunakan         },
-              { teks: 'Bersedia memperpanjang kontrak layanan.',           val: survey.pelayananDiperpanjang   },
-              { teks: 'Bersedia merekomendasikan kepada pihak lain.',      val: survey.bersediaRekomendasikan  },
-              { teks: 'Tertarik menggunakan layanan lain yang ditawarkan.',val: survey.tertarikLayananLain     },
-              { teks: 'Tetap memilih PT Pink Service Indonesia.',          val: survey.tetapMemilih            },
+              { teks: 'Bersedia menggunakan kembali layanan.',              val: survey.akanMenggunakan        },
+              { teks: 'Bersedia memperpanjang kontrak layanan.',            val: survey.pelayananDiperpanjang  },
+              { teks: 'Bersedia merekomendasikan kepada pihak lain.',       val: survey.bersediaRekomendasikan },
+              { teks: 'Tertarik menggunakan layanan lain yang ditawarkan.', val: survey.tertarikLayananLain    },
+              { teks: 'Tetap memilih PT Pink Service Indonesia.',           val: survey.tetapMemilih           },
             ].map((item, i) => (
               <div key={i} className="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3">
                 <p className="text-sm text-slate-600 flex-1">C.{i + 1}. {item.teks}</p>
@@ -460,28 +454,22 @@ export default async function ReportPage({
 
         {/* ── Narasi penjelasan ─────────────────────────────────────── */}
         <div className="bg-white border border-slate-100 rounded-2xl p-6">
-          <h2 className="text-base font-semibold text-slate-900 mb-1">
-            Penjelasan hasil
-          </h2>
+          <h2 className="text-base font-semibold text-slate-900 mb-1">Penjelasan hasil</h2>
           <p className="text-sm text-slate-400 mb-5">
             Analisis otomatis berdasarkan algoritma weighted threshold classifier
           </p>
           <div className="space-y-3">
-            {narasi.split('\n\n').filter(Boolean).map((paragraf, i) => (
-              <p key={i} className="text-sm text-slate-700 leading-relaxed">
-                {paragraf.trim()}
-              </p>
+            {narasi.split('\n\n').filter(Boolean).map((p, i) => (
+              <p key={i} className="text-sm text-slate-700 leading-relaxed">{p.trim()}</p>
             ))}
           </div>
-
-          {/* Cara baca */}
           <div className="mt-6 bg-blue-50/60 border border-blue-100 rounded-xl p-4">
             <p className="text-xs font-semibold text-blue-700 mb-2">Cara membaca hasil ini</p>
             <ul className="space-y-1.5 text-xs text-slate-600">
               <li>• <strong>Skor tertimbang</strong> dihitung dari nilai tiap dimensi (1–3) yang dinormalisasi dan dikalikan bobotnya. Total semua bobot = 100.</li>
-              <li>• <strong>Probabilitas</strong> menunjukkan seberapa yakin klasifikasi ini — semakin jauh skor dari batas threshold, semakin tinggi probabilitasnya.</li>
+              <li>• <strong>Skoring</strong>: skor &lt; 40 = Tidak Puas · skor 40–69 = Cukup Puas · skor ≥ 70 = Puas.</li>
+              <li>• <strong>Probabilitas</strong> menunjukkan keyakinan klasifikasi — semakin jauh skor dari batas threshold, semakin tinggi probabilitasnya.</li>
               <li>• <strong>Dimensi berbobot besar</strong> (seperti Pelayanan Service 35%) lebih menentukan hasil akhir dibanding dimensi berbobot kecil.</li>
-              <li>• Hasil ini bersifat <strong>indikatif</strong> dan dapat berubah jika model di-upgrade ke Random Forest dengan data berlabel.</li>
             </ul>
           </div>
         </div>
@@ -498,7 +486,7 @@ export default async function ReportPage({
           </div>
         )}
 
-        {/* ── Footer navigasi ───────────────────────────────────────── */}
+        {/* ── Footer ───────────────────────────────────────────────── */}
         <div className="flex gap-3 pb-6">
           <Link
             href={session.role === 'admin' ? '/admin/surveys' : '/user/dashboard'}
@@ -507,13 +495,13 @@ export default async function ReportPage({
             Kembali
           </Link>
           <a
-            href={`/user`}
+            href={`/user/result/print/${id}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
           >
-            {/* <FileDown className="w-4 h-4" /> */}
-            Dashboard User
+            <FileDown className="w-4 h-4" />
+            Unduh PDF
           </a>
         </div>
 
