@@ -191,15 +191,17 @@ export default async function ReportPage({
             <ArrowLeft className="w-4 h-4" />
             Kembali
           </Link>
-          <a
-            href={`/user/result/print/${id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
-            <FileDown className="w-4 h-4" />
-            Unduh PDF
-          </a>
+          {session.role === 'admin' && (
+            <a
+              href={`/user/result/print/${id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              <FileDown className="w-4 h-4" />
+              Unduh PDF
+            </a>
+          )}
         </div>
 
         {/* ── Header ───────────────────────────────────────────────── */}
@@ -489,20 +491,22 @@ export default async function ReportPage({
         {/* ── Footer ───────────────────────────────────────────────── */}
         <div className="flex gap-3 pb-6">
           <Link
-            href={session.role === 'admin' ? '/admin/surveys' : '/user/dashboard'}
+            href={session.role === 'admin' ? '/admin/surveys' : '/user'}
             className="flex-1 text-center py-3 rounded-full border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
           >
             Kembali
           </Link>
-          <a
-            href={`/user/result/print/${id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
-            <FileDown className="w-4 h-4" />
-            Unduh PDF
-          </a>
+          {session.role === 'admin' && (
+            <a
+              href={`/user/result/print/${id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              <FileDown className="w-4 h-4" />
+              Unduh PDF
+            </a>
+          )}
         </div>
 
       </div>
