@@ -337,10 +337,11 @@ export default function SurveyPage() {
 
           {/* ══ D. SARAN ════════════════════════════════════════════ */}
           <section className="bg-white border border-slate-100 rounded-2xl p-6 space-y-3">
-            <SectionHeader label="D. Kritik dan Saran" />
+            <SectionHeader label="D. Kritik dan Saran" /> 
             <textarea
+              required
               {...register('saran')}
-              placeholder="Tuliskan kritik dan saran Anda (opsional)"
+              placeholder="Tuliskan kritik dan saran Anda"
               rows={4}
               className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 resize-none"
             />

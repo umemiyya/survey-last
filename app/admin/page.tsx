@@ -27,9 +27,9 @@ export default async function AdminDashboard() {
           <PageHeader title="Dashboard" description={`Ringkasan data kepuasan pelanggan tahun ${stats.year}`} />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard title="Total survey" value={stats.total} color="blue" />
-            <StatCard title="Puas" value={stats.distribusi['Sangat Puas']} color="green" />
-            <StatCard title="Cukup" value={stats.distribusi['Puas']} color="blue" />
-            <StatCard title="Tidak puas" value={stats.distribusi['Tidak Puas']} color="red" />
+            <StatCard title="Puas" value={stats.distribusi['Puas']} color="green" />
+            <StatCard title="Cukup Puas" value={stats.distribusi['Cukup Puas']} color="blue" />
+            <StatCard title="Tidak Puas" value={stats.distribusi['Tidak Puas']} color="red" />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ChartCard title="Distribusi kepuasan" description="Persentase kepuasan pelanggan tahun ini">

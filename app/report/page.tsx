@@ -375,7 +375,7 @@ export default async function ReportPage({
             })}
           </div>
 
-          <div className="mt-5 pt-4 border-t border-slate-100 flex justify-between items-center">
+          <div className="mt-5 pt-4 border-t hidden border-slate-100 flex justify-between items-center">
             <span className="text-sm font-medium text-slate-600">Total skor</span>
             <span className="text-xl font-bold text-slate-900">{skor} / 100</span>
           </div>
