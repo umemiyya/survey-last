@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 
 const navItems = [
-  { href: '/admin/dashboard',   label: 'Dashboard',     icon: LayoutDashboard },
+  { href: '/admin',   label: 'Dashboard',     icon: LayoutDashboard },
   { href: '/admin/surveys',     label: 'Data survey',   icon: ClipboardList   },
   { href: '/admin/laporan',     label: 'Laporan',       icon: FileBarChart    },
   // { href: '/admin/labeling',    label: 'Labeling data', icon: Tag             },
