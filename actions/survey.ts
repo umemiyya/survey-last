@@ -207,3 +207,86 @@ export async function getSurveyStats() {
   const latest = await prisma.survey.findMany({ orderBy: { createdAt: 'desc' }, take: 20 })
   return { total, distribusi, monthlyData, latest, year: currentYear }
 }
+
+// ── Laporan bulanan & tahunan ─────────────────────────────────────────────
+
+export async function getLaporanBulanan(tahun: number, bulan: string) {
+  const surveys = await prisma.survey.findMany({
+    where: { bulan },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  const total = surveys.length
+  const distribusi = {
+    'Puas':       surveys.filter((s) => s.prediksi === 'Puas').length,
+    'Cukup Puas': surveys.filter((s) => s.prediksi === 'Cukup Puas').length,
+    'Tidak Puas': surveys.filter((s) => s.prediksi === 'Tidak Puas').length,
+  }
+
+  const avgRating = (key: string) =>
+    total > 0
+      ? Math.round((surveys.reduce((sum, s) => sum + ((s as any)[key] as number || 0), 0) / total) * 10) / 10
+      : 0
+
+  const rataRata = {
+    kualitasAroma:     avgRating('kualitasAroma'),
+    kebersihanAlat:    avgRating('kebersihanAlat'),
+    ketepatanWaktu:    avgRating('ketepatanWaktu'),
+    kecepatanRespon:   avgRating('kecepatanRespon'),
+    pelayananService:  avgRating('pelayananService'),
+    pelayananComplain: avgRating('pelayananComplain'),
+  }
+
+  return { surveys, total, distribusi, rataRata, bulan, tahun }
+}
+
+export async function getLaporanTahunan(tahun: number) {
+  const surveys = await prisma.survey.findMany({
+    where: {
+      createdAt: {
+        gte: new Date(`${tahun}-01-01T00:00:00Z`),
+        lt:  new Date(`${tahun + 1}-01-01T00:00:00Z`),
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  const total = surveys.length
+  const distribusi = {
+    'Puas':       surveys.filter((s) => s.prediksi === 'Puas').length,
+    'Cukup Puas': surveys.filter((s) => s.prediksi === 'Cukup Puas').length,
+    'Tidak Puas': surveys.filter((s) => s.prediksi === 'Tidak Puas').length,
+  }
+
+  const MONTHS = [
+    'January','February','March','April','May','June',
+    'July','August','September','October','November','December',
+  ]
+
+  const perBulan = MONTHS.map((bulan) => {
+    const ms = surveys.filter((s) => s.bulan === bulan)
+    return {
+      bulan,
+      total:       ms.length,
+      puas:        ms.filter((s) => s.prediksi === 'Puas').length,
+      cukupPuas:   ms.filter((s) => s.prediksi === 'Cukup Puas').length,
+      tidakPuas:   ms.filter((s) => s.prediksi === 'Tidak Puas').length,
+    }
+  })
+
+  const avgRating = (key: string) =>
+    total > 0
+      ? Math.round((surveys.reduce((sum, s) => sum + ((s as any)[key] as number || 0), 0) / total) * 10) / 10
+      : 0
+
+  const rataRata = {
+    kualitasAroma:     avgRating('kualitasAroma'),
+    kebersihanAlat:    avgRating('kebersihanAlat'),
+    ketepatanWaktu:    avgRating('ketepatanWaktu'),
+    kecepatanRespon:   avgRating('kecepatanRespon'),
+    pelayananService:  avgRating('pelayananService'),
+    pelayananComplain: avgRating('pelayananComplain'),
+  }
+
+  return { surveys, total, distribusi, rataRata, perBulan, tahun }
+}

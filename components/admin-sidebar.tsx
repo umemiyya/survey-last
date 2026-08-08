@@ -2,19 +2,23 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, ClipboardList, Settings, LogOut, Tag, GitBranch } from 'lucide-react'
+import {
+  LayoutDashboard, ClipboardList, Settings,
+  LogOut, Tag, GitBranch, FileBarChart
+} from 'lucide-react'
 
 const navItems = [
-  { href: '/admin',   label: 'Dashboard',     icon: LayoutDashboard },
+  { href: '/admin/dashboard',   label: 'Dashboard',     icon: LayoutDashboard },
   { href: '/admin/surveys',     label: 'Data survey',   icon: ClipboardList   },
+  { href: '/admin/laporan',     label: 'Laporan',       icon: FileBarChart    },
   { href: '/admin/labeling',    label: 'Labeling data', icon: Tag             },
-  { href: '/admin/classification', label: 'Klasifikasi',   icon: GitBranch       },
-  // { href: '/admin/settings',    label: 'Pengaturan',    icon: Settings        },
+  { href: '/admin/klasifikasi', label: 'Klasifikasi',   icon: GitBranch       },
+  { href: '/admin/settings',    label: 'Pengaturan',    icon: Settings        },
 ]
 
 export function AdminSidebar() {
-  const pathname  = usePathname()
-  const router    = useRouter()
+  const pathname = usePathname()
+  const router   = useRouter()
 
   const handleLogout = async () => {
     await fetch('/api/logout', { method: 'POST' })
@@ -24,7 +28,6 @@ export function AdminSidebar() {
 
   return (
     <aside className="w-60 border-r border-slate-100 bg-white flex flex-col flex-shrink-0">
-      {/* Logo */}
       <div className="h-16 flex items-center gap-2 px-6 border-b border-slate-100">
         <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
           <span className="text-white text-xs font-semibold">S</span>
@@ -32,10 +35,9 @@ export function AdminSidebar() {
         <span className="font-semibold text-slate-900 text-sm">Admin Panel</span>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 px-3 py-6 space-y-1">
         {navItems.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           const Icon = item.icon
           return (
             <Link
@@ -54,7 +56,6 @@ export function AdminSidebar() {
         })}
       </nav>
 
-      {/* Logout */}
       <div className="px-3 py-4 border-t border-slate-100">
         <button
           onClick={handleLogout}
