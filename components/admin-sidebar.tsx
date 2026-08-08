@@ -11,9 +11,9 @@ const navItems = [
   { href: '/admin/dashboard',   label: 'Dashboard',     icon: LayoutDashboard },
   { href: '/admin/surveys',     label: 'Data survey',   icon: ClipboardList   },
   { href: '/admin/laporan',     label: 'Laporan',       icon: FileBarChart    },
-  { href: '/admin/labeling',    label: 'Labeling data', icon: Tag             },
-  { href: '/admin/klasifikasi', label: 'Klasifikasi',   icon: GitBranch       },
-  { href: '/admin/settings',    label: 'Pengaturan',    icon: Settings        },
+  // { href: '/admin/labeling',    label: 'Labeling data', icon: Tag             },
+  { href: '/admin/classification', label: 'Klasifikasi',   icon: GitBranch       },
+  // { href: '/admin/settings',    label: 'Pengaturan',    icon: Settings        },
 ]
 
 export function AdminSidebar() {
