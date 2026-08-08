@@ -229,6 +229,7 @@ export default function SurveyPage() {
                 <label className="text-sm font-medium text-slate-700 block">Bulan Survey *</label>
                 <select
                   {...register('bulan')}
+                  defaultValue={months[new Date().getMonth()]}
                   className="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                 >
                   <option value="">Pilih bulan</option>

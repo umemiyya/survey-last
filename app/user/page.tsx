@@ -45,7 +45,7 @@ export default async function UserDashboard() {
         />
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
           <DashboardCard
             title="Survey sudah diisi"
             value={completedCount}
@@ -57,7 +57,7 @@ export default async function UserDashboard() {
             subtitle="Siap untuk mengisi survey baru"
             icon={<Clock className="w-full h-full" />}
           />
-          <DashboardCard
+          {/* <DashboardCard
             title="Hasil terakhir"
             value={lastSurvey ? lastSurvey.prediksi ?? '-' : '-'}
             subtitle={
@@ -66,7 +66,7 @@ export default async function UserDashboard() {
                 : 'Belum ada data'
             }
             icon={<TrendingUp className="w-full h-full" />}
-          />
+          /> */}
         </div>
 
         {/* Call to Action */}
