@@ -13,7 +13,7 @@ const navItems = [
   { href: '/admin/laporan',     label: 'Laporan',       icon: FileBarChart    },
   // { href: '/admin/labeling',    label: 'Labeling data', icon: Tag             },
   { href: '/admin/classification', label: 'Klasifikasi',   icon: GitBranch       },
-  // { href: '/admin/settings',    label: 'Pengaturan',    icon: Settings        },
+  { href: '/admin/dataset',    label: 'Dataset',    icon: Settings        },
 ]
 
 export function AdminSidebar() {

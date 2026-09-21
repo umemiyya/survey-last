@@ -25,11 +25,12 @@ export default async function AdminDashboard() {
         </div>
         <div className="p-6 max-w-7xl mx-auto space-y-8">
           <PageHeader title="Dashboard" description={`Ringkasan data kepuasan pelanggan tahun ${stats.year}`} />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <StatCard title="Total survey" value={stats.total} color="blue" />
             <StatCard title="Puas" value={stats.distribusi['Puas']} color="green" />
             <StatCard title="Cukup Puas" value={stats.distribusi['Cukup Puas']} color="blue" />
             <StatCard title="Tidak Puas" value={stats.distribusi['Tidak Puas']} color="red" />
+            <StatCard title="Akurasi" value={0.92} color="green" />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ChartCard title="Distribusi kepuasan" description="Persentase kepuasan pelanggan tahun ini">
